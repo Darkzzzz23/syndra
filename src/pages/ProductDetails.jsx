@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { getProductById } from "../services/productService";
 import { saveReferralCookie, getReferralFromCookie } from "../services/orderService";
+import { createCheckoutSession } from "../services/stripeService";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -9,9 +10,9 @@ function ProductDetails() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [buying, setBuying] = useState(false);
 
   useEffect(() => {
-    // Save referral if coming from promo link
     const ref = searchParams.get("ref");
     if (ref) {
       saveReferralCookie(ref);
@@ -36,10 +37,25 @@ function ProductDetails() {
     loadProduct();
   }, [id, searchParams]);
 
-  const handleBuy = () => {
-    // Placeholder — will connect to Stripe when account is ready
-    const referral = getReferralFromCookie();
-    alert(`Purchase flow coming soon!\n\nProduct: ${product?.title}\nPrice: $${product?.price?.toFixed(2)}\nReferral: ${referral || "none"}\n\nStripe integration ready — waiting for API keys.`);
+  const handleBuy = async () => {
+    if (!product) return;
+    setBuying(true);
+
+    try {
+      const promoterSlug = getReferralFromCookie();
+      const customerEmail = prompt("Enter your email for the receipt:", "");
+      if (!customerEmail) {
+        setBuying(false);
+        return;
+      }
+
+      const checkoutUrl = await createCheckoutSession(product, customerEmail, promoterSlug);
+      window.location.href = checkoutUrl;
+    } catch (err) {
+      console.error("Checkout failed:", err);
+      alert("Payment failed. Please try again. " + err.message);
+      setBuying(false);
+    }
   };
 
   if (loading) {
@@ -95,11 +111,9 @@ function ProductDetails() {
             </div>
           </div>
 
-          <button onClick={handleBuy} style={styles.buyBtn}>
-            Buy Now — ${product.price?.toFixed(2) ?? "0.00"}
+          <button onClick={handleBuy} disabled={buying} style={styles.buyBtn}>
+            {buying ? "Redirecting to Stripe…" : `Buy Now — $${product.price?.toFixed(2) ?? "0.00"}`}
           </button>
-
-          <p style={styles.comingSoon}>Stripe integration ready — activating when account is live.</p>
         </div>
       </div>
     </div>
@@ -121,7 +135,6 @@ const styles = {
   infoLabel: { margin: 0, color: "#94a3b8", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.12em" },
   infoValue: { margin: "10px 0 0", fontSize: "16px", fontWeight: 600 },
   buyBtn: { marginTop: "32px", width: "100%", padding: "16px 24px", borderRadius: "16px", border: "none", background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff", fontSize: "16px", fontWeight: 700, cursor: "pointer" },
-  comingSoon: { textAlign: "center", color: "#64748b", fontSize: "13px", marginTop: "12px" },
 };
 
 export default ProductDetails;
