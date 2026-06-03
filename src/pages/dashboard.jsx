@@ -154,6 +154,27 @@ function Dashboard() {
             </div>
           </section>
 
+          {/* RECENT REVIEWS */}
+          <section style={styles.section}>
+            <h2 style={styles.sectionTitle}>Recent Reviews</h2>
+            <div style={styles.grid}>
+              {creatorProducts.filter(p => p.totalReviews > 0).length > 0 ? (
+                creatorProducts.filter(p => p.totalReviews > 0).slice(0, 5).map(p => (
+                  <div key={p.id} style={styles.reviewMiniCard}>
+                    <p style={styles.reviewProductName}>{p.title || p.name}</p>
+                    <p style={styles.reviewRating}>
+                      {"★".repeat(Math.round(p.averageRating || 0))}{"☆".repeat(5 - Math.round(p.averageRating || 0))}
+                      <span style={{ color: "#64748b", marginLeft: "8px" }}>{p.totalReviews || 0} review{(p.totalReviews || 0) !== 1 ? "s" : ""}</span>
+                    </p>
+                    <Link to={`/product/${p.id}`} style={styles.reviewLink}>View reviews →</Link>
+                  </div>
+                ))
+              ) : (
+                <div style={styles.emptyCard}><p>No reviews yet. Reviews will appear here when customers review your products.</p></div>
+              )}
+            </div>
+          </section>
+
           <Link to="/settings" style={styles.settingsCard}>
             <div style={styles.settingsCardContent}>
               <span style={styles.settingsIcon}>⚙️</span>
@@ -353,6 +374,10 @@ const styles = {
   pendingBanner: { padding: "20px 24px", borderRadius: "16px", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", color: "#fde68a", marginBottom: "24px", fontWeight: 600 },
   applyCard: { padding: "40px", borderRadius: "20px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.14)", textAlign: "center", marginBottom: "24px" },
   buyerCard: { padding: "60px 40px", borderRadius: "24px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.14)", textAlign: "center" },
+  reviewMiniCard: { padding: "16px", borderRadius: "14px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.1)" },
+  reviewProductName: { fontSize: "15px", fontWeight: 600, margin: 0 },
+  reviewRating: { color: "#fbbf24", marginTop: "6px", fontSize: "14px" },
+  reviewLink: { color: "#a5b4ff", textDecoration: "none", fontSize: "13px", display: "inline-block", marginTop: "8px" },
   settingsCard: { display: "block", marginTop: "32px", padding: "20px 24px", borderRadius: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(79,124,255,0.1)", textDecoration: "none" },
   settingsCardContent: { display: "flex", alignItems: "center", gap: "16px" },
   settingsIcon: { fontSize: "24px" },
