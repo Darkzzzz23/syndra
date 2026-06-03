@@ -22,6 +22,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import PromoterRoute from "./components/PromoterRoute";
 import Signup from "./pages/Signup";
+import Contact from "./pages/Contact";
 
 function App() {
   const { currentUser, userProfile } = useContext(AuthContext);
@@ -55,6 +56,7 @@ function App() {
           <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
           <Route path="/go/:id" element={<Redirect />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/contact" element={<Contact />} />
         </Routes>
       </div>
     </div>

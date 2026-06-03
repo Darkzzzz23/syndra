@@ -71,6 +71,7 @@ function Navbar() {
                   <div style={styles.dropdownMenu}>
                     <Link to="/settings" style={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>Settings</Link>
                     <Link to="/dashboard" style={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>Dashboard</Link>
+                    <Link to="/contact" style={{ ...styles.navLink, fontSize: "12px" }}>Contact</Link>
                     {role !== "promoter" && !isApprovedPromoter && (
                       <Link to="/apply-promoter" style={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>Become Promoter</Link>
                     )}
