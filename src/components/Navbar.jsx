@@ -61,21 +61,24 @@ function Navbar() {
             <Link to="/login" style={styles.authBtn}>Sign In</Link>
           ) : (
             <div style={styles.userArea}>
-              <Link to="/dashboard" style={styles.dashboardBtn}>Dashboard</Link>
-
               <div style={styles.dropdown}>
                 <button onClick={() => setDropdownOpen(!dropdownOpen)} style={styles.gearBtn}>
-                  ⚙️
+                  {userProfile?.profileImage ? (
+                    <img src={userProfile.profileImage} alt="" style={styles.navAvatar} />
+                  ) : (
+                    <span style={styles.navAvatarPlaceholder}>👤</span>
+                  )}
                 </button>
                 {dropdownOpen && (
                   <div style={styles.dropdownMenu}>
-                    <Link to="/settings" style={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>Settings</Link>
-                    <Link to="/dashboard" style={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>Dashboard</Link>
-                    <Link to="/contact" style={{ ...styles.navLink, fontSize: "12px" }}>Contact</Link>
+                    <Link to="/dashboard" style={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>📊 Dashboard</Link>
+                    <Link to="/wallet" style={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>💰 Wallet</Link>
+                    <Link to="/settings" style={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>⚙️ Settings</Link>
                     {role !== "promoter" && !isApprovedPromoter && (
-                      <Link to="/apply-promoter" style={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>Become Promoter</Link>
+                      <Link to="/apply-promoter" style={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>📣 Become Promoter</Link>
                     )}
-                    <button onClick={() => { setDropdownOpen(false); logout(); }} style={styles.dropdownItem}>Logout</button>
+                    <Link to="/contact" style={styles.dropdownItem} onClick={() => setDropdownOpen(false)}>💬 Contact</Link>
+                    <button onClick={() => { setDropdownOpen(false); logout(); }} style={{ ...styles.dropdownItem, color: "#fca5a5" }}>🚪 Logout</button>
                   </div>
                 )}
               </div>
@@ -100,10 +103,11 @@ const styles = {
   rightSection: {},
   authBtn: { padding: "8px 20px", background: "linear-gradient(135deg, rgba(79, 124, 255, 0.15), rgba(124, 58, 237, 0.15))", border: "1px solid rgba(79, 124, 255, 0.3)", color: "#a5b4ff", textDecoration: "none", borderRadius: "8px", fontWeight: "600", fontSize: "14px" },
   userArea: { display: "flex", alignItems: "center", gap: "12px" },
-  dashboardBtn: { padding: "8px 16px", borderRadius: "8px", background: "rgba(79,124,255,0.1)", color: "#a5b4ff", textDecoration: "none", fontSize: "14px", fontWeight: 600 },
   dropdown: { position: "relative" },
-  gearBtn: { padding: "8px 10px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", color: "#94a3b8", cursor: "pointer", fontSize: "16px" },
-  dropdownMenu: { position: "absolute", top: "42px", right: "0", background: "#0f172a", border: "1px solid rgba(79,124,255,0.15)", borderRadius: "12px", padding: "8px", minWidth: "180px", zIndex: 200, display: "flex", flexDirection: "column", gap: "2px" },
+  gearBtn: { padding: "4px", borderRadius: "50%", background: "transparent", border: "2px solid rgba(79,124,255,0.3)", cursor: "pointer", width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  navAvatar: { width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" },
+  navAvatarPlaceholder: { fontSize: "18px" },
+  dropdownMenu: { position: "absolute", top: "48px", right: "0", background: "#0f172a", border: "1px solid rgba(79,124,255,0.15)", borderRadius: "12px", padding: "8px", minWidth: "200px", zIndex: 200, display: "flex", flexDirection: "column", gap: "2px" },
   dropdownItem: { padding: "10px 14px", borderRadius: "8px", background: "transparent", border: "none", color: "#cbd5e1", cursor: "pointer", fontSize: "14px", textDecoration: "none", textAlign: "left", width: "100%", display: "block" },
 };
 

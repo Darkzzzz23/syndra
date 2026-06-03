@@ -23,6 +23,7 @@ import AdminRoute from "./components/AdminRoute";
 import PromoterRoute from "./components/PromoterRoute";
 import Signup from "./pages/Signup";
 import Contact from "./pages/Contact";
+import Wallet from "./pages/Wallet";
 
 function App() {
   const { currentUser, userProfile } = useContext(AuthContext);
@@ -57,6 +58,7 @@ function App() {
           <Route path="/go/:id" element={<Redirect />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
         </Routes>
       </div>
     </div>
