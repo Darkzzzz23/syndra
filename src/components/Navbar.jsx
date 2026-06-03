@@ -41,6 +41,8 @@ function Navbar() {
         <div style={styles.navLinks}>
           <Link to="/" style={{ ...styles.navLink, ...(hoveredLink === "home" && styles.navLinkHover) }} onMouseEnter={() => setHoveredLink("home")} onMouseLeave={() => setHoveredLink(null)}>Home</Link>
 
+          <Link to="/leaderboard" style={{ ...styles.navLink, ...(hoveredLink === "leaderboard" && styles.navLinkHover) }} onMouseEnter={() => setHoveredLink("leaderboard")} onMouseLeave={() => setHoveredLink(null)}>Leaderboard</Link>
+
           <Link to="/marketplace" style={{ ...styles.navLink, ...(hoveredLink === "marketplace" && styles.navLinkHover) }} onMouseEnter={() => setHoveredLink("marketplace")} onMouseLeave={() => setHoveredLink(null)}>Marketplace</Link>
 
           {currentUser && role === "creator" && (

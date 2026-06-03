@@ -72,6 +72,9 @@ function Home() {
             </p>
             <Link to="/marketplace" style={styles.cardLink}>Browse Products →</Link>
           </div>
+          <div style={{ textAlign: "center", marginTop: "32px" }}>
+            <Link to="/leaderboard" style={styles.cardLink}>View Leaderboard →</Link>
+           </div>
         </div>
       </section>
 

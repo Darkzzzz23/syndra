@@ -24,6 +24,7 @@ import PromoterRoute from "./components/PromoterRoute";
 import Signup from "./pages/Signup";
 import Contact from "./pages/Contact";
 import Wallet from "./pages/Wallet";
+import Leaderboard from "./pages/Leaderboard";
 
 function App() {
   const { currentUser, userProfile } = useContext(AuthContext);
@@ -59,6 +60,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
         </Routes>
       </div>
     </div>
