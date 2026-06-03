@@ -85,7 +85,7 @@ function Login() {
           </div>
 
           <p style={styles.signupText}>
-            Don't have an account? <Link to="/login" style={styles.signupLink}>Sign up here</Link>
+            Don't have an account? <Link to="/signup" style={styles.signupLink}>Sign up here</Link>
           </p>
         </div>
       </div>

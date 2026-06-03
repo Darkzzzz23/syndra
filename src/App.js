@@ -21,6 +21,7 @@ import Settings from "./pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import PromoterRoute from "./components/PromoterRoute";
+import Signup from "./pages/Signup";
 
 function App() {
   const { currentUser, userProfile } = useContext(AuthContext);
@@ -53,6 +54,7 @@ function App() {
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
           <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
           <Route path="/go/:id" element={<Redirect />} />
+          <Route path="/signup" element={<Signup />} />
         </Routes>
       </div>
     </div>
