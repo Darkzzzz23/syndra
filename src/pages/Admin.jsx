@@ -29,7 +29,13 @@ import {
   sendPromoterApprovedEmail,
   sendPromoterRejectedEmail,
 } from "../services/emailService";
-import { getPendingWithdrawals, updateWithdrawalStatus } from "../services/withdrawalService";
+import {
+  getPendingWithdrawals,
+  updateWithdrawalStatus,
+  markWithdrawalPaid,
+} from "../services/withdrawalService";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "../firebase/config";
 
 function Admin() {
   const { currentUser, userProfile } = useContext(AuthContext);
@@ -46,6 +52,7 @@ function Admin() {
   const [pendingPromoters, setPendingPromoters] = useState([]);
   const [approvedPromoters, setApprovedPromoters] = useState([]);
   const [pendingWithdrawals, setPendingWithdrawals] = useState([]);
+  const [approvedWithdrawals, setApprovedWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingProductId, setUpdatingProductId] = useState(null);
 
@@ -55,10 +62,19 @@ function Admin() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [teamTab, setTeamTab] = useState("members");
 
+  const refreshWithdrawals = async () => {
+    const [pending, approved] = await Promise.all([
+      getPendingWithdrawals(),
+      getDocs(query(collection(db, "withdrawals"), where("status", "==", "approved"))),
+    ]);
+    setPendingWithdrawals(pending);
+    setApprovedWithdrawals(approved.docs.map((d) => ({ id: d.id, ...d.data() })));
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [overview, users, clicks, top, pending, approved, pendingPromos, approvedPromos, withdrawals] =
+        const [overview, users, clicks, top, pending, approved, pendingPromos, approvedPromos] =
           await Promise.all([
             getAdminOverview(),
             getRecentUsers(5),
@@ -68,7 +84,6 @@ function Admin() {
             getApprovedProducts(),
             getPendingPromoters(),
             getApprovedPromoters(10),
-            getPendingWithdrawals(),
           ]);
 
         setStats(overview);
@@ -79,7 +94,7 @@ function Admin() {
         setApprovedProducts(approved);
         setPendingPromoters(pendingPromos);
         setApprovedPromoters(approvedPromos);
-        setPendingWithdrawals(withdrawals);
+        await refreshWithdrawals();
       } catch (error) {
         console.error("Error loading admin dashboard:", error);
       } finally {
@@ -186,12 +201,17 @@ function Admin() {
 
   const handleWithdrawApprove = async (id) => {
     await updateWithdrawalStatus(id, "approved", currentUser.uid);
-    setPendingWithdrawals(await getPendingWithdrawals());
+    await refreshWithdrawals();
   };
 
   const handleWithdrawReject = async (id) => {
     await updateWithdrawalStatus(id, "rejected", currentUser.uid);
-    setPendingWithdrawals(await getPendingWithdrawals());
+    await refreshWithdrawals();
+  };
+
+  const handleMarkPaid = async (id) => {
+    await markWithdrawalPaid(id, currentUser.uid);
+    await refreshWithdrawals();
   };
 
   const loadTeamData = async () => {
@@ -396,6 +416,29 @@ function Admin() {
             ) : (
               <div style={styles.emptyState}>No pending withdrawal requests.</div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* APPROVED — READY TO PAY */}
+      {(isOwner || isAdmin) && approvedWithdrawals.length > 0 && (
+        <div style={styles.section}>
+          <h2 style={styles.sectionTitle}>Approved — Ready to Pay</h2>
+          <div style={styles.reviewGrid}>
+            {approvedWithdrawals.map((w) => (
+              <div key={w.id} style={styles.reviewCard}>
+                <div style={styles.reviewHeader}>
+                  <div>
+                    <h3 style={styles.reviewTitle}>${w.amount.toFixed(2)}</h3>
+                    <p style={styles.reviewMeta}>{w.email} · {w.role}</p>
+                  </div>
+                  <span style={{ ...styles.reviewStatus, background: "rgba(34,197,94,0.14)", color: "#bbf7d0" }}>approved</span>
+                </div>
+                <div style={styles.reviewActions}>
+                  <button onClick={() => handleMarkPaid(w.id)} style={styles.approveBtn}>Mark as Paid</button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

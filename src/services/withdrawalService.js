@@ -42,3 +42,12 @@ export const updateWithdrawalStatus = async (withdrawalId, status, reviewerUid) 
     reviewedBy: reviewerUid,
   }, { merge: true });
 };
+// Mark withdrawal as paid
+export const markWithdrawalPaid = async (withdrawalId, reviewerUid) => {
+  const ref = doc(db, "withdrawals", withdrawalId);
+  await setDoc(ref, {
+    status: "paid",
+    paidAt: serverTimestamp(),
+    reviewedBy: reviewerUid,
+  }, { merge: true });
+};
