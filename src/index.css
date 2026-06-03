@@ -26,8 +26,30 @@ body {
   flex-direction: column;
 }
 
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
 
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+}
 
+::-webkit-scrollbar-thumb {
+  background: rgba(79, 124, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 124, 255, 0.5);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(79, 124, 255, 0.3) rgba(255, 255, 255, 0.02);
+}
 
 /* Dark text selection */
 ::selection {
