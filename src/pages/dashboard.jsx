@@ -9,6 +9,7 @@ function Dashboard() {
   const { logout, currentUser, userProfile } = useContext(AuthContext);
   const role = userProfile?.role;
   const userName = userProfile?.email?.split("@")[0] || "User";
+  const creatorStatus = userProfile?.creatorStatus;
 
   const [creatorProducts, setCreatorProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -22,29 +23,26 @@ function Dashboard() {
 
   useEffect(() => {
     if (!currentUser) return;
-    if (role === "creator") {
+    if (role === "creator" && creatorStatus === "approved") {
       loadCreatorData();
     } else if (role === "promoter") {
       loadPromoterData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser, role]);
+  }, [currentUser, role, creatorStatus]);
 
   const loadCreatorData = async () => {
     setLoadingProducts(true);
     try {
       const products = await getCreatorProducts(currentUser.uid);
       setCreatorProducts(products);
-      const counts = products.reduce(
-        (acc, p) => {
-          acc.total += 1;
-          if (p.status === "approved") acc.approved += 1;
-          if (p.status === "pending") acc.pending += 1;
-          if (p.status === "rejected") acc.rejected += 1;
-          return acc;
-        },
-        { total: 0, pending: 0, approved: 0, rejected: 0 }
-      );
+      const counts = products.reduce((acc, p) => {
+        acc.total += 1;
+        if (p.status === "approved") acc.approved += 1;
+        if (p.status === "pending") acc.pending += 1;
+        if (p.status === "rejected") acc.rejected += 1;
+        return acc;
+      }, { total: 0, pending: 0, approved: 0, rejected: 0 });
       setProductCounts(counts);
     } catch (err) {
       console.error("Failed to load creator products:", err);
@@ -56,10 +54,7 @@ function Dashboard() {
   const loadPromoterData = async () => {
     setLoadingPromoter(true);
     try {
-      const [profile, approved] = await Promise.all([
-        getPromoterByUid(currentUser.uid),
-        getApprovedProducts(),
-      ]);
+      const [profile, approved] = await Promise.all([getPromoterByUid(currentUser.uid), getApprovedProducts()]);
       setPromoterProfile(profile);
       setPromoterProducts(approved);
     } catch (err) {
@@ -96,94 +91,71 @@ function Dashboard() {
           <div style={styles.header}>
             <div style={styles.headerLeft}>
               <div style={styles.avatar}>
-                {userProfile?.profileImage ? (
-                  <img src={userProfile.profileImage} alt="" style={styles.avatarImg} />
-                ) : (
-                  <span style={styles.avatarPlaceholder}>👤</span>
-                )}
+                {userProfile?.profileImage ? <img src={userProfile.profileImage} alt="" style={styles.avatarImg} /> : <span style={styles.avatarPlaceholder}>👤</span>}
               </div>
               <div>
                 <h1 style={styles.title}>{userProfile?.displayName || userName}</h1>
-                <p style={styles.subtitle}>Creator · Manage your products and track performance</p>
+                <p style={styles.subtitle}>Creator · {creatorStatus === "approved" ? "Manage your products" : creatorStatus === "pending_review" ? "Account under review" : "Account rejected"}</p>
               </div>
             </div>
             <div style={styles.headerActions}>
-              <Link to="/upload-product" style={styles.uploadBtn}>Upload Product</Link>
+              {creatorStatus === "approved" && <Link to="/upload-product" style={styles.uploadBtn}>Upload Product</Link>}
               <button onClick={logout} style={styles.logoutBtn}>Sign Out</button>
             </div>
           </div>
 
-          <div style={styles.statusGrid}>
-            <div style={styles.statusCard}><p style={styles.cardTitle}>Total</p><p style={styles.cardValue}>{productCounts.total}</p></div>
-            <div style={styles.statusCard}><p style={styles.cardTitle}>Pending</p><p style={styles.cardValue}>{productCounts.pending}</p></div>
-            <div style={styles.statusCard}><p style={styles.cardTitle}>Approved</p><p style={styles.cardValue}>{productCounts.approved}</p></div>
-            <div style={styles.statusCard}><p style={styles.cardTitle}>Rejected</p><p style={styles.cardValue}>{productCounts.rejected}</p></div>
-          </div>
+          {creatorStatus === "pending_review" && (
+            <div style={styles.pendingBanner}>⏳ Your creator account is under review. You'll be able to upload once approved.</div>
+          )}
+          {creatorStatus === "rejected" && (
+            <div style={{ ...styles.pendingBanner, background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", color: "#fecaca" }}>❌ Your creator application was rejected. Contact support or switch roles in Settings.</div>
+          )}
 
-          <section style={styles.section}>
-            <h2 style={styles.sectionTitle}>Your Products</h2>
-            <div style={styles.grid}>
-              {loadingProducts ? (
-                <div style={styles.emptyCard}><p>Loading products…</p></div>
-              ) : creatorProducts.length > 0 ? (
-                creatorProducts.map((p) => (
-                  <div key={p.id} style={styles.productCard}>
-                    <div style={styles.productHeader}>
-                      <span style={styles.productTitle}>{p.title || p.name}</span>
-                      <span style={styles.productBadge}>{p.totalClicks ?? 0} clicks</span>
-                    </div>
-                    <p style={styles.productDesc}>{p.description}</p>
-                    <div style={styles.productFooter}>
-                      <span style={styles.statusPill}>{p.status}</span>
-                      <div style={styles.productActions}>
-                        <Link to={`/product/${p.id}`} style={styles.viewBtn}>View</Link>
-                        <button onClick={() => handleDelete(p.id)} disabled={deletingProductId === p.id} style={styles.deleteBtn}>
-                          {deletingProductId === p.id ? "…" : "Delete"}
-                        </button>
+          {creatorStatus === "approved" && (
+            <>
+              <div style={styles.statusGrid}>
+                <div style={styles.statusCard}><p style={styles.cardTitle}>Total</p><p style={styles.cardValue}>{productCounts.total}</p></div>
+                <div style={styles.statusCard}><p style={styles.cardTitle}>Pending</p><p style={styles.cardValue}>{productCounts.pending}</p></div>
+                <div style={styles.statusCard}><p style={styles.cardTitle}>Approved</p><p style={styles.cardValue}>{productCounts.approved}</p></div>
+                <div style={styles.statusCard}><p style={styles.cardTitle}>Rejected</p><p style={styles.cardValue}>{productCounts.rejected}</p></div>
+              </div>
+
+              <section style={styles.section}>
+                <h2 style={styles.sectionTitle}>Your Products</h2>
+                <div style={styles.grid}>
+                  {loadingProducts ? <div style={styles.emptyCard}><p>Loading products…</p></div> : creatorProducts.length > 0 ? creatorProducts.map((p) => (
+                    <div key={p.id} style={styles.productCard}>
+                      <div style={styles.productHeader}><span style={styles.productTitle}>{p.title || p.name}</span><span style={styles.productBadge}>{p.totalClicks ?? 0} clicks</span></div>
+                      <p style={styles.productDesc}>{p.description}</p>
+                      <div style={styles.productFooter}>
+                        <span style={styles.statusPill}>{p.status}</span>
+                        <div style={styles.productActions}>
+                          <Link to={`/product/${p.id}`} style={styles.viewBtn}>View</Link>
+                          <button onClick={() => handleDelete(p.id)} disabled={deletingProductId === p.id} style={styles.deleteBtn}>{deletingProductId === p.id ? "…" : "Delete"}</button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <div style={styles.emptyCard}>
-                  <h3>No products yet</h3>
-                  <p>Upload your first digital product to get started.</p>
-                  <Link to="/upload-product" style={styles.uploadBtn}>Upload Now</Link>
+                  )) : <div style={styles.emptyCard}><h3>No products yet</h3><p>Upload your first digital product to get started.</p><Link to="/upload-product" style={styles.uploadBtn}>Upload Now</Link></div>}
                 </div>
-              )}
-            </div>
-          </section>
+              </section>
 
-          {/* RECENT REVIEWS */}
-          <section style={styles.section}>
-            <h2 style={styles.sectionTitle}>Recent Reviews</h2>
-            <div style={styles.grid}>
-              {creatorProducts.filter(p => p.totalReviews > 0).length > 0 ? (
-                creatorProducts.filter(p => p.totalReviews > 0).slice(0, 5).map(p => (
-                  <div key={p.id} style={styles.reviewMiniCard}>
-                    <p style={styles.reviewProductName}>{p.title || p.name}</p>
-                    <p style={styles.reviewRating}>
-                      {"★".repeat(Math.round(p.averageRating || 0))}{"☆".repeat(5 - Math.round(p.averageRating || 0))}
-                      <span style={{ color: "#64748b", marginLeft: "8px" }}>{p.totalReviews || 0} review{(p.totalReviews || 0) !== 1 ? "s" : ""}</span>
-                    </p>
-                    <Link to={`/product/${p.id}`} style={styles.reviewLink}>View reviews →</Link>
-                  </div>
-                ))
-              ) : (
-                <div style={styles.emptyCard}><p>No reviews yet. Reviews will appear here when customers review your products.</p></div>
-              )}
-            </div>
-          </section>
+              <section style={styles.section}>
+                <h2 style={styles.sectionTitle}>Recent Reviews</h2>
+                <div style={styles.grid}>
+                  {creatorProducts.filter(p => p.totalReviews > 0).length > 0 ? creatorProducts.filter(p => p.totalReviews > 0).slice(0, 5).map(p => (
+                    <div key={p.id} style={styles.reviewMiniCard}>
+                      <p style={styles.reviewProductName}>{p.title || p.name}</p>
+                      <p style={styles.reviewRating}>{"★".repeat(Math.round(p.averageRating || 0))}{"☆".repeat(5 - Math.round(p.averageRating || 0))}<span style={{ color: "#64748b", marginLeft: "8px" }}>{p.totalReviews || 0} review{(p.totalReviews || 0) !== 1 ? "s" : ""}</span></p>
+                      <Link to={`/product/${p.id}`} style={styles.reviewLink}>View reviews →</Link>
+                    </div>
+                  )) : <div style={styles.emptyCard}><p>No reviews yet.</p></div>}
+                </div>
+              </section>
+            </>
+          )}
 
           <Link to="/settings" style={styles.settingsCard}>
-            <div style={styles.settingsCardContent}>
-              <span style={styles.settingsIcon}>⚙️</span>
-              <div>
-                <p style={styles.settingsTitle}>Settings</p>
-                <p style={styles.settingsSub}>Edit profile, switch role, account</p>
-              </div>
-              <span style={styles.settingsArrow}>→</span>
-            </div>
+            <div style={styles.settingsCardContent}><span style={styles.settingsIcon}>⚙️</span><div><p style={styles.settingsTitle}>Settings</p><p style={styles.settingsSub}>Edit profile, switch role, account</p></div><span style={styles.settingsArrow}>→</span></div>
           </Link>
         </div>
       </div>
@@ -200,40 +172,13 @@ function Dashboard() {
         <div style={styles.container}>
           <div style={styles.header}>
             <div style={styles.headerLeft}>
-              <div style={styles.avatar}>
-                {userProfile?.profileImage ? (
-                  <img src={userProfile.profileImage} alt="" style={styles.avatarImg} />
-                ) : (
-                  <span style={styles.avatarPlaceholder}>👤</span>
-                )}
-              </div>
-              <div>
-                <h1 style={styles.title}>{userProfile?.displayName || userName}</h1>
-                <p style={styles.subtitle}>
-                  Promoter · {isApproved ? `@${promoterProfile.slug}` : isPending ? "Application under review" : "Apply to earn commissions"}
-                </p>
-              </div>
+              <div style={styles.avatar}>{userProfile?.profileImage ? <img src={userProfile.profileImage} alt="" style={styles.avatarImg} /> : <span style={styles.avatarPlaceholder}>👤</span>}</div>
+              <div><h1 style={styles.title}>{userProfile?.displayName || userName}</h1><p style={styles.subtitle}>Promoter · {isApproved ? `@${promoterProfile.slug}` : isPending ? "Application under review" : "Apply to earn commissions"}</p></div>
             </div>
-            <div style={styles.headerActions}>
-              {isApproved && <Link to="/promote" style={styles.uploadBtn}>Promote Products</Link>}
-              <button onClick={logout} style={styles.logoutBtn}>Sign Out</button>
-            </div>
+            <div style={styles.headerActions}>{isApproved && <Link to="/promote" style={styles.uploadBtn}>Promote Products</Link>}<button onClick={logout} style={styles.logoutBtn}>Sign Out</button></div>
           </div>
-
-          {isPending && (
-            <div style={styles.pendingBanner}>
-              ⏳ Your promoter application is being reviewed. We'll notify you once approved.
-            </div>
-          )}
-
-          {!isApproved && !isPending && (
-            <div style={styles.applyCard}>
-              <h3>You haven't applied yet</h3>
-              <p>Submit your application to start promoting products and earning commissions.</p>
-              <Link to="/apply-promoter" style={styles.uploadBtn}>Apply Now</Link>
-            </div>
-          )}
-
+          {isPending && <div style={styles.pendingBanner}>⏳ Your promoter application is being reviewed.</div>}
+          {!isApproved && !isPending && <div style={styles.applyCard}><h3>You haven't applied yet</h3><p>Submit your application to start promoting.</p><Link to="/apply-promoter" style={styles.uploadBtn}>Apply Now</Link></div>}
           {isApproved && (
             <>
               <div style={styles.statusGrid}>
@@ -241,47 +186,19 @@ function Dashboard() {
                 <div style={styles.statusCard}><p style={styles.cardTitle}>Total Sales</p><p style={styles.cardValue}>{promoterProfile?.totalSales || 0}</p></div>
                 <div style={styles.statusCard}><p style={styles.cardTitle}>Earnings</p><p style={styles.cardValue}>${(promoterProfile?.totalEarnings || 0).toFixed(2)}</p></div>
               </div>
-
               <section style={styles.section}>
                 <h2 style={styles.sectionTitle}>Products You Can Promote</h2>
                 <div style={styles.grid}>
-                  {loadingPromoter ? (
-                    <div style={styles.emptyCard}><p>Loading products…</p></div>
-                  ) : promoterProducts.length > 0 ? (
-                    promoterProducts.slice(0, 6).map((p) => {
-                      const link = generateReferralLink(p.id, promoterProfile.slug);
-                      return (
-                        <div key={p.id} style={styles.productCard}>
-                          <div style={styles.productHeader}>
-                            <span style={styles.productTitle}>{p.title || p.name}</span>
-                            <span style={styles.productBadge}>${p.price?.toFixed(2) ?? "0.00"}</span>
-                          </div>
-                          <p style={styles.productDesc}>{p.description?.slice(0, 80)}...</p>
-                          <button onClick={() => copyLink(link, p.id)} style={styles.copyBtn}>
-                            {copiedId === p.id ? "✓ Copied!" : "Copy Link"}
-                          </button>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div style={styles.emptyCard}><p>No products available yet.</p></div>
-                  )}
+                  {loadingPromoter ? <div style={styles.emptyCard}><p>Loading…</p></div> : promoterProducts.length > 0 ? promoterProducts.slice(0, 6).map((p) => {
+                    const link = generateReferralLink(p.id, promoterProfile.slug);
+                    return <div key={p.id} style={styles.productCard}><div style={styles.productHeader}><span style={styles.productTitle}>{p.title || p.name}</span><span style={styles.productBadge}>${p.price?.toFixed(2) ?? "0.00"}</span></div><p style={styles.productDesc}>{p.description?.slice(0, 80)}...</p><button onClick={() => copyLink(link, p.id)} style={styles.copyBtn}>{copiedId === p.id ? "✓ Copied!" : "Copy Link"}</button></div>;
+                  }) : <div style={styles.emptyCard}><p>No products available yet.</p></div>}
                 </div>
                 <Link to="/promote" style={{ ...styles.uploadBtn, display: "inline-block", marginTop: "20px" }}>View All Products</Link>
               </section>
             </>
           )}
-
-          <Link to="/settings" style={styles.settingsCard}>
-            <div style={styles.settingsCardContent}>
-              <span style={styles.settingsIcon}>⚙️</span>
-              <div>
-                <p style={styles.settingsTitle}>Settings</p>
-                <p style={styles.settingsSub}>Edit profile, switch role, account</p>
-              </div>
-              <span style={styles.settingsArrow}>→</span>
-            </div>
-          </Link>
+          <Link to="/settings" style={styles.settingsCard}><div style={styles.settingsCardContent}><span style={styles.settingsIcon}>⚙️</span><div><p style={styles.settingsTitle}>Settings</p><p style={styles.settingsSub}>Edit profile, switch role, account</p></div><span style={styles.settingsArrow}>→</span></div></Link>
         </div>
       </div>
     );
@@ -292,48 +209,12 @@ function Dashboard() {
     <div style={styles.page}>
       <div style={styles.container}>
         <div style={styles.header}>
-          <div style={styles.headerLeft}>
-            <div style={styles.avatar}>
-              {userProfile?.profileImage ? (
-                <img src={userProfile.profileImage} alt="" style={styles.avatarImg} />
-              ) : (
-                <span style={styles.avatarPlaceholder}>👤</span>
-              )}
-            </div>
-            <div>
-              <h1 style={styles.title}>{userProfile?.displayName || userName}</h1>
-              <p style={styles.subtitle}>Buyer · Discover digital products from talented creators</p>
-            </div>
-          </div>
+          <div style={styles.headerLeft}><div style={styles.avatar}>{userProfile?.profileImage ? <img src={userProfile.profileImage} alt="" style={styles.avatarImg} /> : <span style={styles.avatarPlaceholder}>👤</span>}</div><div><h1 style={styles.title}>{userProfile?.displayName || userName}</h1><p style={styles.subtitle}>Buyer · Discover digital products</p></div></div>
           <button onClick={logout} style={styles.logoutBtn}>Sign Out</button>
         </div>
-
-        <div style={styles.buyerCard}>
-          <div style={{ fontSize: "48px", marginBottom: "16px" }}>🛍️</div>
-          <h2>Ready to explore?</h2>
-          <p style={{ color: "#94a3b8", marginBottom: "24px" }}>
-            Browse the marketplace to find worksheets, ebooks, digital art, and more.
-          </p>
-          <Link to="/marketplace" style={styles.uploadBtn}>Browse Marketplace</Link>
-        </div>
-
-        <div style={{ ...styles.section, marginTop: "32px" }}>
-          <h2 style={styles.sectionTitle}>Your Purchases</h2>
-          <div style={styles.emptyCard}>
-            <p>No purchases yet. When you buy products, they'll appear here for download.</p>
-          </div>
-        </div>
-
-        <Link to="/settings" style={styles.settingsCard}>
-          <div style={styles.settingsCardContent}>
-            <span style={styles.settingsIcon}>⚙️</span>
-            <div>
-              <p style={styles.settingsTitle}>Settings</p>
-              <p style={styles.settingsSub}>Edit profile, switch role, account</p>
-            </div>
-            <span style={styles.settingsArrow}>→</span>
-          </div>
-        </Link>
+        <div style={styles.buyerCard}><div style={{ fontSize: "48px", marginBottom: "16px" }}>🛍️</div><h2>Ready to explore?</h2><p style={{ color: "#94a3b8", marginBottom: "24px" }}>Browse the marketplace to find worksheets, ebooks, digital art, and more.</p><Link to="/marketplace" style={styles.uploadBtn}>Browse Marketplace</Link></div>
+        <div style={{ ...styles.section, marginTop: "32px" }}><h2 style={styles.sectionTitle}>Your Purchases</h2><div style={styles.emptyCard}><p>No purchases yet.</p></div></div>
+        <Link to="/settings" style={styles.settingsCard}><div style={styles.settingsCardContent}><span style={styles.settingsIcon}>⚙️</span><div><p style={styles.settingsTitle}>Settings</p><p style={styles.settingsSub}>Edit profile, switch role, account</p></div><span style={styles.settingsArrow}>→</span></div></Link>
       </div>
     </div>
   );

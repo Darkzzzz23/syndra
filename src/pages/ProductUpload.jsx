@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { uploadProductFile, createProduct } from "../services/productService";
 
@@ -14,7 +14,7 @@ const categories = [
 ];
 
 function ProductUpload() {
-  const { currentUser } = useContext(AuthContext);
+  const { currentUser, userProfile } = useContext(AuthContext);
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -27,6 +27,18 @@ function ProductUpload() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  if (userProfile?.creatorStatus && userProfile.creatorStatus !== "approved") {
+    return (
+      <div style={styles.page}>
+        <div style={styles.container}>
+          <h1 style={styles.title}>Access Restricted</h1>
+          <p style={styles.subtitle}>Your creator account is pending approval. You'll be able to upload once approved.</p>
+          <Link to="/dashboard" style={{ color: "#a5b4ff", textDecoration: "none" }}>← Back to Dashboard</Link>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -234,139 +246,25 @@ function ProductUpload() {
 }
 
 const styles = {
-  page: {
-    minHeight: "calc(100vh - 70px)",
-    padding: "40px 24px",
-    color: "#fff",
-    background: "linear-gradient(180deg, #05070d 0%, #0f172a 100%)",
-    fontFamily: "Inter, sans-serif",
-  },
-  container: {
-    maxWidth: "760px",
-    margin: "0 auto",
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(79,124,255,0.18)",
-    borderRadius: "24px",
-    padding: "32px",
-    boxShadow: "0 30px 80px rgba(0,0,0,0.25)",
-  },
-  header: {
-    marginBottom: "24px",
-  },
-  title: {
-    margin: 0,
-    fontSize: "32px",
-  },
-  subtitle: {
-    color: "#94a3b8",
-    marginTop: "12px",
-    lineHeight: 1.7,
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "18px",
-  },
-  label: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-    fontSize: "14px",
-    color: "#cbd5e1",
-  },
-  input: {
-    borderRadius: "14px",
-    border: "1px solid rgba(148,163,184,0.2)",
-    padding: "14px 16px",
-    fontSize: "14px",
-    background: "rgba(255,255,255,0.04)",
-    color: "#fff",
-    outline: "none",
-  },
-  customSelect: {
-    borderRadius: "14px",
-    border: "1px solid rgba(148,163,184,0.2)",
-    padding: "14px 16px",
-    fontSize: "14px",
-    background: "rgba(255,255,255,0.04)",
-    color: "#fff",
-    cursor: "pointer",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    userSelect: "none",
-  },
-  selectArrow: {
-    color: "#94a3b8",
-    fontSize: "12px",
-  },
-  dropdownList: {
-    position: "absolute",
-    top: "100%",
-    left: 0,
-    right: 0,
-    marginTop: "4px",
-    borderRadius: "14px",
-    border: "1px solid rgba(79,124,255,0.2)",
-    background: "#0f172a",
-    overflow: "hidden",
-    zIndex: 10,
-    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-  },
-  dropdownOption: {
-    padding: "12px 16px",
-    fontSize: "14px",
-    color: "#cbd5e1",
-    cursor: "pointer",
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
-  },
-  dropdownOptionActive: {
-    background: "rgba(79,124,255,0.15)",
-    color: "#a5b4ff",
-  },
-  fileInput: {
-    borderRadius: "14px",
-    border: "1px dashed rgba(148,163,184,0.3)",
-    padding: "14px 16px",
-    fontSize: "14px",
-    background: "rgba(255,255,255,0.02)",
-    color: "#94a3b8",
-    outline: "none",
-    cursor: "pointer",
-  },
-  row: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "18px",
-  },
-  button: {
-    padding: "16px 24px",
-    borderRadius: "16px",
-    border: "none",
-    cursor: "pointer",
-    fontSize: "16px",
-    fontWeight: 700,
-    background: "linear-gradient(135deg, #4f7cff, #7c3aed)",
-    color: "#fff",
-    marginTop: "8px",
-  },
-  hint: {
-    fontSize: "12px",
-    color: "#64748b",
-    marginTop: "4px",
-  },
-  alertError: {
-    padding: "14px 18px",
-    borderRadius: "16px",
-    background: "rgba(248,113,113,0.16)",
-    color: "#fecaca",
-  },
-  alertSuccess: {
-    padding: "14px 18px",
-    borderRadius: "16px",
-    background: "rgba(34,197,94,0.16)",
-    color: "#bbf7d0",
-  },
+  page: { minHeight: "calc(100vh - 70px)", padding: "40px 24px", color: "#fff", background: "linear-gradient(180deg, #05070d 0%, #0f172a 100%)", fontFamily: "Inter, sans-serif" },
+  container: { maxWidth: "760px", margin: "0 auto", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.18)", borderRadius: "24px", padding: "32px", boxShadow: "0 30px 80px rgba(0,0,0,0.25)" },
+  header: { marginBottom: "24px" },
+  title: { margin: 0, fontSize: "32px" },
+  subtitle: { color: "#94a3b8", marginTop: "12px", lineHeight: 1.7 },
+  form: { display: "flex", flexDirection: "column", gap: "18px" },
+  label: { display: "flex", flexDirection: "column", gap: "10px", fontSize: "14px", color: "#cbd5e1" },
+  input: { borderRadius: "14px", border: "1px solid rgba(148,163,184,0.2)", padding: "14px 16px", fontSize: "14px", background: "rgba(255,255,255,0.04)", color: "#fff", outline: "none" },
+  customSelect: { borderRadius: "14px", border: "1px solid rgba(148,163,184,0.2)", padding: "14px 16px", fontSize: "14px", background: "rgba(255,255,255,0.04)", color: "#fff", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", userSelect: "none" },
+  selectArrow: { color: "#94a3b8", fontSize: "12px" },
+  dropdownList: { position: "absolute", top: "100%", left: 0, right: 0, marginTop: "4px", borderRadius: "14px", border: "1px solid rgba(79,124,255,0.2)", background: "#0f172a", overflow: "hidden", zIndex: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.5)" },
+  dropdownOption: { padding: "12px 16px", fontSize: "14px", color: "#cbd5e1", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.04)" },
+  dropdownOptionActive: { background: "rgba(79,124,255,0.15)", color: "#a5b4ff" },
+  fileInput: { borderRadius: "14px", border: "1px dashed rgba(148,163,184,0.3)", padding: "14px 16px", fontSize: "14px", background: "rgba(255,255,255,0.02)", color: "#94a3b8", outline: "none", cursor: "pointer" },
+  row: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "18px" },
+  button: { padding: "16px 24px", borderRadius: "16px", border: "none", cursor: "pointer", fontSize: "16px", fontWeight: 700, background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff", marginTop: "8px" },
+  hint: { fontSize: "12px", color: "#64748b", marginTop: "4px" },
+  alertError: { padding: "14px 18px", borderRadius: "16px", background: "rgba(248,113,113,0.16)", color: "#fecaca" },
+  alertSuccess: { padding: "14px 18px", borderRadius: "16px", background: "rgba(34,197,94,0.16)", color: "#bbf7d0" },
 };
 
 export default ProductUpload;
