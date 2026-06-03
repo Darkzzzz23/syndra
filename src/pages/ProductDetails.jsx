@@ -3,6 +3,7 @@ import { useParams, Link, useSearchParams } from "react-router-dom";
 import { getProductById } from "../services/productService";
 import { saveReferralCookie, getReferralFromCookie } from "../services/orderService";
 import { createCheckoutSession } from "../services/stripeService";
+import { submitReview, getProductReviews } from "../services/reviewService";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -11,6 +12,12 @@ function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [buying, setBuying] = useState(false);
+
+  const [reviews, setReviews] = useState([]);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     const ref = searchParams.get("ref");
@@ -26,6 +33,8 @@ function ProductDetails() {
           return;
         }
         setProduct(data);
+        const productReviews = await getProductReviews(id);
+        setReviews(productReviews);
       } catch (err) {
         console.error("Unable to load product details", err);
         setError("Unable to load product details.");
@@ -55,6 +64,29 @@ function ProductDetails() {
       console.error("Checkout failed:", err);
       alert("Payment failed. Please try again. " + err.message);
       setBuying(false);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!reviewComment.trim()) return;
+    setSubmittingReview(true);
+    try {
+      await submitReview({
+        productId: product.id,
+        customerId: "anonymous",
+        customerEmail: "anonymous",
+        rating: reviewRating,
+        comment: reviewComment,
+      });
+      const updated = await getProductReviews(product.id);
+      setReviews(updated);
+      setReviewComment("");
+      setReviewRating(5);
+      setShowReviewForm(false);
+    } catch (err) {
+      console.error("Review failed:", err);
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -111,6 +143,59 @@ function ProductDetails() {
             </div>
           </div>
 
+          {/* REVIEWS SECTION */}
+          <div style={styles.reviewsSection}>
+            <div style={styles.reviewsHeader}>
+              <h3 style={styles.reviewsTitle}>
+                Reviews {product.averageRating ? `(${product.averageRating}★)` : ""}
+              </h3>
+              <button onClick={() => setShowReviewForm(!showReviewForm)} style={styles.reviewBtn}>
+                {showReviewForm ? "Cancel" : "Write a Review"}
+              </button>
+            </div>
+
+            {showReviewForm && (
+              <div style={styles.reviewForm}>
+                <div style={styles.starsRow}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span
+                      key={star}
+                      onClick={() => setReviewRating(star)}
+                      style={{ cursor: "pointer", fontSize: "24px", color: star <= reviewRating ? "#fbbf24" : "#475569" }}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <textarea
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  placeholder="Share your thoughts..."
+                  style={{ ...styles.reviewInput, minHeight: "80px", marginTop: "10px" }}
+                />
+                <button onClick={handleSubmitReview} disabled={submittingReview} style={styles.submitReviewBtn}>
+                  {submittingReview ? "Submitting..." : "Submit Review"}
+                </button>
+              </div>
+            )}
+
+            {reviews.length > 0 ? (
+              reviews.map((r) => (
+                <div key={r.id} style={styles.reviewCard}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontWeight: 600 }}>{r.customerEmail?.split("@")[0] || "Anonymous"}</span>
+                    <span style={{ color: "#fbbf24" }}>
+                      {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
+                    </span>
+                  </div>
+                  <p style={{ color: "#cbd5e1", marginTop: "6px", fontSize: "14px" }}>{r.comment}</p>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: "#64748b", fontSize: "14px" }}>No reviews yet. Be the first!</p>
+            )}
+          </div>
+
           <button onClick={handleBuy} disabled={buying} style={styles.buyBtn}>
             {buying ? "Redirecting to Stripe…" : `Buy Now — $${product.price?.toFixed(2) ?? "0.00"}`}
           </button>
@@ -134,6 +219,15 @@ const styles = {
   infoBlock: { padding: "20px", borderRadius: "18px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.1)" },
   infoLabel: { margin: 0, color: "#94a3b8", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.12em" },
   infoValue: { margin: "10px 0 0", fontSize: "16px", fontWeight: 600 },
+  reviewsSection: { marginTop: "28px", borderTop: "1px solid rgba(79,124,255,0.1)", paddingTop: "24px" },
+  reviewsHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" },
+  reviewsTitle: { fontSize: "18px", margin: 0 },
+  reviewBtn: { padding: "8px 16px", borderRadius: "10px", background: "rgba(79,124,255,0.15)", color: "#a5b4ff", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "13px" },
+  reviewForm: { marginBottom: "20px", padding: "16px", borderRadius: "14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(79,124,255,0.1)" },
+  starsRow: { display: "flex", gap: "4px" },
+  reviewInput: { borderRadius: "14px", border: "1px solid rgba(148,163,184,0.2)", padding: "14px 16px", fontSize: "14px", background: "rgba(255,255,255,0.04)", color: "#fff", outline: "none", width: "100%" },
+  submitReviewBtn: { padding: "10px 20px", borderRadius: "14px", border: "none", background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff", cursor: "pointer", fontWeight: 700, marginTop: "10px" },
+  reviewCard: { padding: "14px", borderRadius: "12px", background: "rgba(255,255,255,0.03)", marginBottom: "8px" },
   buyBtn: { marginTop: "32px", width: "100%", padding: "16px 24px", borderRadius: "16px", border: "none", background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff", fontSize: "16px", fontWeight: 700, cursor: "pointer" },
 };
 
