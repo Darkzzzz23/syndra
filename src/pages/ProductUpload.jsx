@@ -26,6 +26,7 @@ function ProductUpload() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -75,6 +76,7 @@ function ProductUpload() {
       setFile(null);
       setThumbnail(null);
       setPreviews([]);
+      setDropdownOpen(false);
       setTimeout(() => navigate("/dashboard"), 1400);
     } catch (uploadError) {
       console.error("Product upload failed", uploadError);
@@ -123,19 +125,31 @@ function ProductUpload() {
           </label>
 
           <div style={styles.row}>
-            <label style={{ ...styles.label, flex: 1 }}>
+            <label style={{ ...styles.label, flex: 1, position: "relative" }}>
               Category
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                style={styles.select}
-              >
-                {categories.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              <div style={styles.customSelect} onClick={() => setDropdownOpen(!dropdownOpen)}>
+                <span>{category}</span>
+                <span style={styles.selectArrow}>▾</span>
+              </div>
+              {dropdownOpen && (
+                <div style={styles.dropdownList}>
+                  {categories.map((option) => (
+                    <div
+                      key={option}
+                      style={{
+                        ...styles.dropdownOption,
+                        ...(category === option ? styles.dropdownOptionActive : {}),
+                      }}
+                      onClick={() => {
+                        setCategory(option);
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      {option}
+                    </div>
+                  ))}
+                </div>
+              )}
             </label>
 
             <label style={{ ...styles.label, flex: 1 }}>
@@ -269,21 +283,46 @@ const styles = {
     color: "#fff",
     outline: "none",
   },
-  select: {
+  customSelect: {
     borderRadius: "14px",
     border: "1px solid rgba(148,163,184,0.2)",
     padding: "14px 16px",
     fontSize: "14px",
     background: "rgba(255,255,255,0.04)",
     color: "#fff",
-    outline: "none",
     cursor: "pointer",
-    appearance: "none",
-    WebkitAppearance: "none",
-    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "right 14px center",
-    paddingRight: "40px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    userSelect: "none",
+  },
+  selectArrow: {
+    color: "#94a3b8",
+    fontSize: "12px",
+  },
+  dropdownList: {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    marginTop: "4px",
+    borderRadius: "14px",
+    border: "1px solid rgba(79,124,255,0.2)",
+    background: "#0f172a",
+    overflow: "hidden",
+    zIndex: 10,
+    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+  },
+  dropdownOption: {
+    padding: "12px 16px",
+    fontSize: "14px",
+    color: "#cbd5e1",
+    cursor: "pointer",
+    borderBottom: "1px solid rgba(255,255,255,0.04)",
+  },
+  dropdownOptionActive: {
+    background: "rgba(79,124,255,0.15)",
+    color: "#a5b4ff",
   },
   fileInput: {
     borderRadius: "14px",
