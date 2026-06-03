@@ -75,7 +75,7 @@ function Home() {
         </div>
       </section>
 
-           {/* HOW IT WORKS */}
+      {/* HOW IT WORKS */}
       <section style={{ ...styles.section, ...styles.stepsSection }}>
         <h2 style={styles.sectionTitle}>How It Works</h2>
         <p style={styles.sectionSubtitle}>Four simple steps to start earning</p>
@@ -165,6 +165,26 @@ function Home() {
         </div>
       </section>
 
+      {/* DISCORD */}
+      <section style={styles.discordSection}>
+        <div style={styles.discordCard}>
+          <div style={styles.discordIcon}>💬</div>
+          <h2 style={styles.discordTitle}>Join the Community</h2>
+          <p style={styles.discordDesc}>
+            Connect with creators, promoters, and buyers. Get early access to features, share feedback, and grow together.
+          </p>
+          <div style={styles.discordFeatures}>
+            <span>🤝 Meet peers</span>
+            <span>💡 Get tips</span>
+            <span>🚀 Early updates</span>
+            <span>🎉 Giveaways</span>
+          </div>
+          <a href="https://discord.gg/kytBEbJ5" target="_blank" rel="noreferrer" style={styles.discordBtn}>
+            Join Discord Server
+          </a>
+        </div>
+      </section>
+
       {/* CTA BANNER */}
       <section style={styles.ctaSection}>
         <h2 style={styles.ctaTitle}>Ready to Join?</h2>
@@ -185,10 +205,10 @@ function Home() {
             <p style={styles.footerTagline}>Digital Marketplace for Creators & Promoters</p>
           </div>
           <div style={styles.footerLinks}>
-           <Link to="/legal" style={{ ...styles.navLink, fontSize: "12px" }}>Legal</Link>
-           <Link to="/contact" style={styles.footerLink}>Contact</Link>
+            <Link to="/legal" style={styles.footerLink}>Legal</Link>
+            <Link to="/contact" style={styles.footerLink}>Contact</Link>
             <Link to="/marketplace" style={styles.footerLink}>Marketplace</Link>
-            <a href="https://discord.gg/YOUR_LINK" target="_blank" rel="noreferrer" style={styles.footerLink}>Community</a>
+            <a href="https://discord.gg/kytBEbJ5" target="_blank" rel="noreferrer" style={styles.footerLink}>Community</a>
           </div>
         </div>
         <div style={styles.footerBottom}>
@@ -200,369 +220,82 @@ function Home() {
 }
 
 const styles = {
-  page: {
-    color: "#fff",
-    fontFamily: "Inter, sans-serif",
-    background: "linear-gradient(180deg, #05070d 0%, #0f172a 100%)",
-  },
+  page: { color: "#fff", fontFamily: "Inter, sans-serif", background: "linear-gradient(180deg, #05070d 0%, #0f172a 100%)" },
 
-  // HERO
-  hero: {
-    padding: "100px 24px 80px",
-    textAlign: "center",
-    position: "relative",
-    overflow: "hidden",
-  },
-  heroContent: {
-    maxWidth: "720px",
-    margin: "0 auto",
-    position: "relative",
-    zIndex: 1,
-  },
-  heroBadge: {
-    display: "inline-block",
-    padding: "8px 20px",
-    borderRadius: "999px",
-    background: "rgba(79,124,255,0.15)",
-    border: "1px solid rgba(79,124,255,0.25)",
-    color: "#a5b4ff",
-    fontSize: "14px",
-    fontWeight: 600,
-    marginBottom: "24px",
-  },
-  heroTitle: {
-    fontSize: "56px",
-    fontWeight: 800,
-    margin: 0,
-    lineHeight: 1.1,
-  },
-  heroAccent: {
-    background: "linear-gradient(135deg, #4f7cff, #a78bfa)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    backgroundClip: "text",
-  },
-  heroSubtitle: {
-    fontSize: "18px",
-    color: "#94a3b8",
-    marginTop: "20px",
-    lineHeight: 1.7,
-    maxWidth: "560px",
-    margin: "20px auto 0",
-  },
-  heroButtons: {
-    display: "flex",
-    gap: "16px",
-    justifyContent: "center",
-    marginTop: "36px",
-    flexWrap: "wrap",
-  },
-  heroBtnPrimary: {
-    padding: "16px 32px",
-    borderRadius: "16px",
-    background: "linear-gradient(135deg, #4f7cff, #7c3aed)",
-    color: "#fff",
-    textDecoration: "none",
-    fontWeight: 700,
-    fontSize: "16px",
-    display: "inline-block",
-  },
-  heroBtnSecondary: {
-    padding: "16px 32px",
-    borderRadius: "16px",
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.12)",
-    color: "#cbd5e1",
-    textDecoration: "none",
-    fontWeight: 600,
-    fontSize: "16px",
-    display: "inline-block",
-  },
-  heroGlow: {
-    position: "absolute",
-    top: "-100px",
-    left: "50%",
-    transform: "translateX(-50%)",
-    width: "600px",
-    height: "600px",
-    background: "radial-gradient(circle, rgba(79,124,255,0.15), transparent 70%)",
-    pointerEvents: "none",
-  },
+  hero: { padding: "100px 24px 80px", textAlign: "center", position: "relative", overflow: "hidden" },
+  heroContent: { maxWidth: "720px", margin: "0 auto", position: "relative", zIndex: 1 },
+  heroBadge: { display: "inline-block", padding: "8px 20px", borderRadius: "999px", background: "rgba(79,124,255,0.15)", border: "1px solid rgba(79,124,255,0.25)", color: "#a5b4ff", fontSize: "14px", fontWeight: 600, marginBottom: "24px" },
+  heroTitle: { fontSize: "56px", fontWeight: 800, margin: 0, lineHeight: 1.1 },
+  heroAccent: { background: "linear-gradient(135deg, #4f7cff, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" },
+  heroSubtitle: { fontSize: "18px", color: "#94a3b8", marginTop: "20px", lineHeight: 1.7, maxWidth: "560px", margin: "20px auto 0" },
+  heroButtons: { display: "flex", gap: "16px", justifyContent: "center", marginTop: "36px", flexWrap: "wrap" },
+  heroBtnPrimary: { padding: "16px 32px", borderRadius: "16px", background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff", textDecoration: "none", fontWeight: 700, fontSize: "16px", display: "inline-block" },
+  heroBtnSecondary: { padding: "16px 32px", borderRadius: "16px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#cbd5e1", textDecoration: "none", fontWeight: 600, fontSize: "16px", display: "inline-block" },
+  heroGlow: { position: "absolute", top: "-100px", left: "50%", transform: "translateX(-50%)", width: "600px", height: "600px", background: "radial-gradient(circle, rgba(79,124,255,0.15), transparent 70%)", pointerEvents: "none" },
 
-  // SECTIONS
-  section: {
-    padding: "80px 24px",
-  },
-  sectionTitle: {
-    fontSize: "36px",
-    fontWeight: 700,
-    textAlign: "center",
-    margin: 0,
-  },
-  sectionSubtitle: {
-    color: "#94a3b8",
-    textAlign: "center",
-    marginTop: "12px",
-    fontSize: "16px",
-  },
+  section: { padding: "80px 24px" },
+  sectionTitle: { fontSize: "36px", fontWeight: 700, textAlign: "center", margin: 0 },
+  sectionSubtitle: { color: "#94a3b8", textAlign: "center", marginTop: "12px", fontSize: "16px" },
 
-  // ROLE CARDS
-  cardsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: "24px",
-    maxWidth: "960px",
-    margin: "40px auto 0",
-  },
-  card: {
-    padding: "36px 28px",
-    borderRadius: "20px",
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(79,124,255,0.12)",
-    textAlign: "center",
-  },
-  cardFeatured: {
-    border: "1px solid rgba(79,124,255,0.35)",
-    background: "rgba(79,124,255,0.06)",
-  },
-  cardIcon: {
-    fontSize: "40px",
-    marginBottom: "16px",
-  },
-  cardTitle: {
-    fontSize: "22px",
-    fontWeight: 700,
-    margin: "0 0 10px",
-  },
-  cardDesc: {
-    color: "#cbd5e1",
-    lineHeight: 1.7,
-    fontSize: "14px",
-    marginBottom: "20px",
-  },
-  cardLink: {
-    color: "#a5b4ff",
-    textDecoration: "none",
-    fontWeight: 600,
-    fontSize: "14px",
-  },
+  cardsGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px", maxWidth: "960px", margin: "40px auto 0" },
+  card: { padding: "36px 28px", borderRadius: "20px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.12)", textAlign: "center" },
+  cardFeatured: { border: "1px solid rgba(79,124,255,0.35)", background: "rgba(79,124,255,0.06)" },
+  cardIcon: { fontSize: "40px", marginBottom: "16px" },
+  cardTitle: { fontSize: "22px", fontWeight: 700, margin: "0 0 10px" },
+  cardDesc: { color: "#cbd5e1", lineHeight: 1.7, fontSize: "14px", marginBottom: "20px" },
+  cardLink: { color: "#a5b4ff", textDecoration: "none", fontWeight: 600, fontSize: "14px" },
 
-  // HOW IT WORKS
-    stepsSection: {
-    background: "rgba(255,255,255,0.02)",
-    borderTop: "1px solid rgba(79,124,255,0.08)",
-    borderBottom: "1px solid rgba(79,124,255,0.08)",
-  },
-  stepsContainer: {
-    maxWidth: "600px",
-    margin: "48px auto 0",
-    display: "flex",
-    flexDirection: "column",
-    gap: "0px",
-  },
-  stepRow: {
-    display: "flex",
-    gap: "20px",
-    alignItems: "flex-start",
-    position: "relative",
-  },
-  stepLeft: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    flexShrink: 0,
-    width: "60px",
-  },
-  stepIconCircle: {
-    width: "56px",
-    height: "56px",
-    borderRadius: "50%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-    zIndex: 1,
-  },
-  stepEmoji: {
-    fontSize: "24px",
-  },
-  stepConnector: {
-    width: "2px",
-    height: "60px",
-    background: "rgba(79,124,255,0.15)",
-    marginTop: "8px",
-  },
-  stepRight: {
-    flex: 1,
-    paddingBottom: "40px",
-  },
-  stepNumber: {
-    fontSize: "12px",
-    fontWeight: 700,
-    letterSpacing: "0.15em",
-    textTransform: "uppercase",
-  },
-  stepTitle: {
-    fontSize: "20px",
-    fontWeight: 700,
-    margin: "4px 0 6px",
-  },
-  stepDesc: {
-    color: "#94a3b8",
-    fontSize: "14px",
-    lineHeight: 1.6,
-    margin: 0,
-  },
+  stepsSection: { background: "rgba(255,255,255,0.02)", borderTop: "1px solid rgba(79,124,255,0.08)", borderBottom: "1px solid rgba(79,124,255,0.08)" },
+  stepsContainer: { maxWidth: "600px", margin: "48px auto 0", display: "flex", flexDirection: "column", gap: "0px" },
+  stepRow: { display: "flex", gap: "20px", alignItems: "flex-start", position: "relative" },
+  stepLeft: { display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0, width: "60px" },
+  stepIconCircle: { width: "56px", height: "56px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, zIndex: 1 },
+  stepEmoji: { fontSize: "24px" },
+  stepConnector: { width: "2px", height: "60px", background: "rgba(79,124,255,0.15)", marginTop: "8px" },
+  stepRight: { flex: 1, paddingBottom: "40px" },
+  stepNumber: { fontSize: "12px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase" },
+  stepTitle: { fontSize: "20px", fontWeight: 700, margin: "4px 0 6px" },
+  stepDesc: { color: "#94a3b8", fontSize: "14px", lineHeight: 1.6, margin: 0 },
 
-  // FEATURED PRODUCTS
-  productsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-    gap: "20px",
-    maxWidth: "1000px",
-    margin: "40px auto 0",
-  },
-  productCard: {
-    borderRadius: "16px",
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(79,124,255,0.12)",
-    overflow: "hidden",
-    textDecoration: "none",
-    color: "#fff",
-    transition: "transform 0.2s",
-  },
-  productImage: {
-    height: "140px",
-    background: "rgba(79,124,255,0.08)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  productThumb: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  },
-  productPlaceholder: {
-    fontSize: "40px",
-  },
-  productInfo: {
-    padding: "16px",
-  },
-  productCategory: {
-    fontSize: "11px",
-    color: "#94a3b8",
-    textTransform: "uppercase",
-    letterSpacing: "0.08em",
-  },
-  productTitle: {
-    fontSize: "16px",
-    fontWeight: 600,
-    margin: "6px 0",
-  },
-  productPrice: {
-    fontSize: "14px",
-    fontWeight: 700,
-    color: "#a5b4ff",
-  },
-  emptyProducts: {
-    gridColumn: "1/-1",
-    textAlign: "center",
-    padding: "40px",
-    color: "#94a3b8",
-  },
-  viewAll: {
-    textAlign: "center",
-    marginTop: "32px",
-  },
+  productsGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px", maxWidth: "1000px", margin: "40px auto 0" },
+  productCard: { borderRadius: "16px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.12)", overflow: "hidden", textDecoration: "none", color: "#fff" },
+  productImage: { height: "140px", background: "rgba(79,124,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  productThumb: { width: "100%", height: "100%", objectFit: "cover" },
+  productPlaceholder: { fontSize: "40px" },
+  productInfo: { padding: "16px" },
+  productCategory: { fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em" },
+  productTitle: { fontSize: "16px", fontWeight: 600, margin: "6px 0" },
+  productPrice: { fontSize: "14px", fontWeight: 700, color: "#a5b4ff" },
+  emptyProducts: { gridColumn: "1/-1", textAlign: "center", padding: "40px", color: "#94a3b8" },
+  viewAll: { textAlign: "center", marginTop: "32px" },
 
-  // STATS
-  statsSection: {
-    background: "rgba(255,255,255,0.02)",
-    borderTop: "1px solid rgba(79,124,255,0.08)",
-    borderBottom: "1px solid rgba(79,124,255,0.08)",
-  },
-  statsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-    gap: "32px",
-    maxWidth: "800px",
-    margin: "0 auto",
-  },
-  statItem: {
-    textAlign: "center",
-  },
-  statIcon: {
-    fontSize: "28px",
-    marginBottom: "8px",
-  },
-  statValue: {
-    fontSize: "24px",
-    fontWeight: 700,
-  },
-  statLabel: {
-    color: "#94a3b8",
-    fontSize: "13px",
-    marginTop: "4px",
-  },
+  statsSection: { background: "rgba(255,255,255,0.02)", borderTop: "1px solid rgba(79,124,255,0.08)", borderBottom: "1px solid rgba(79,124,255,0.08)" },
+  statsGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "32px", maxWidth: "800px", margin: "0 auto" },
+  statItem: { textAlign: "center" },
+  statIcon: { fontSize: "28px", marginBottom: "8px" },
+  statValue: { fontSize: "24px", fontWeight: 700 },
+  statLabel: { color: "#94a3b8", fontSize: "13px", marginTop: "4px" },
 
-  // CTA
-  ctaSection: {
-    padding: "80px 24px",
-    textAlign: "center",
-  },
-  ctaTitle: {
-    fontSize: "36px",
-    fontWeight: 700,
-    margin: 0,
-  },
-  ctaSubtitle: {
-    color: "#94a3b8",
-    marginTop: "12px",
-    fontSize: "16px",
-  },
+  discordSection: { padding: "60px 24px", textAlign: "center" },
+  discordCard: { maxWidth: "500px", margin: "0 auto", padding: "40px 32px", borderRadius: "24px", background: "rgba(88,101,242,0.06)", border: "1px solid rgba(88,101,242,0.2)" },
+  discordIcon: { fontSize: "48px", marginBottom: "16px" },
+  discordTitle: { fontSize: "28px", fontWeight: 700, margin: 0 },
+  discordDesc: { color: "#94a3b8", marginTop: "12px", lineHeight: 1.7 },
+  discordFeatures: { display: "flex", justifyContent: "center", gap: "16px", flexWrap: "wrap", marginTop: "20px", fontSize: "14px", color: "#a5b4ff" },
+  discordBtn: { display: "inline-block", marginTop: "24px", padding: "14px 28px", borderRadius: "14px", background: "#5865F2", color: "#fff", textDecoration: "none", fontWeight: 700, fontSize: "15px" },
 
-  // FOOTER
-  footer: {
-    padding: "40px 24px",
-    borderTop: "1px solid rgba(79,124,255,0.08)",
-  },
-  footerContent: {
-    maxWidth: "1000px",
-    margin: "0 auto",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: "20px",
-  },
+  ctaSection: { padding: "80px 24px", textAlign: "center" },
+  ctaTitle: { fontSize: "36px", fontWeight: 700, margin: 0 },
+  ctaSubtitle: { color: "#94a3b8", marginTop: "12px", fontSize: "16px" },
+
+  footer: { padding: "40px 24px", borderTop: "1px solid rgba(79,124,255,0.08)" },
+  footerContent: { maxWidth: "1000px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px" },
   footerBrand: {},
-  footerLogo: {
-    fontSize: "18px",
-    fontWeight: 700,
-    color: "#a5b4ff",
-  },
-  footerTagline: {
-    color: "#64748b",
-    fontSize: "13px",
-    marginTop: "4px",
-  },
-  footerLinks: {
-    display: "flex",
-    gap: "24px",
-  },
-  footerLink: {
-    color: "#94a3b8",
-    textDecoration: "none",
-    fontSize: "14px",
-  },
-  footerBottom: {
-    textAlign: "center",
-    marginTop: "24px",
-    color: "#475569",
-    fontSize: "13px",
-  },
+  footerLogo: { fontSize: "18px", fontWeight: 700, color: "#a5b4ff" },
+  footerTagline: { color: "#64748b", fontSize: "13px", marginTop: "4px" },
+  footerLinks: { display: "flex", gap: "24px" },
+  footerLink: { color: "#94a3b8", textDecoration: "none", fontSize: "14px" },
+  footerBottom: { textAlign: "center", marginTop: "24px", color: "#475569", fontSize: "13px" },
 };
 
 export default Home;

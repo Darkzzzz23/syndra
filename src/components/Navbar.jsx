@@ -54,6 +54,8 @@ function Navbar() {
           {currentUser && (role === "owner" || role === "admin" || role === "moderator") && (
             <Link to="/admin" style={{ ...styles.navLink, ...(hoveredLink === "admin" && styles.navLinkHover) }} onMouseEnter={() => setHoveredLink("admin")} onMouseLeave={() => setHoveredLink(null)}>Admin</Link>
           )}
+
+          <a href="https://discord.gg/kytBEbJ5" target="_blank" rel="noreferrer" style={{ ...styles.navLink, ...(hoveredLink === "discord" && styles.navLinkHover) }} onMouseEnter={() => setHoveredLink("discord")} onMouseLeave={() => setHoveredLink(null)}>Community</a>
         </div>
 
         <div style={styles.rightSection}>
