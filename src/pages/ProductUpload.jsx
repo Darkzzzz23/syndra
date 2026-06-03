@@ -40,16 +40,13 @@ function ProductUpload() {
     setSuccess("");
 
     try {
-      // Upload main product file
       const fileUrl = await uploadProductFile(currentUser.uid, file);
 
-      // Upload thumbnail if provided
       let thumbnailUrl = "";
       if (thumbnail) {
         thumbnailUrl = await uploadProductFile(currentUser.uid, thumbnail);
       }
 
-      // Upload preview images if provided
       let previewUrls = [];
       if (previews.length > 0) {
         const uploadPromises = previews.map((preview) =>
@@ -131,7 +128,7 @@ function ProductUpload() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                style={styles.input}
+                style={styles.select}
               >
                 {categories.map((option) => (
                   <option key={option} value={option}>
@@ -161,7 +158,7 @@ function ProductUpload() {
               type="file"
               accept="image/*"
               onChange={(e) => setThumbnail(e.target.files?.[0] || null)}
-              style={styles.input}
+              style={styles.fileInput}
             />
           </label>
 
@@ -172,7 +169,7 @@ function ProductUpload() {
               accept="image/*"
               multiple
               onChange={(e) => setPreviews(Array.from(e.target.files || []))}
-              style={styles.input}
+              style={styles.fileInput}
             />
           </label>
 
@@ -205,7 +202,7 @@ function ProductUpload() {
                 }
                 setFile(selectedFile);
               }}
-              style={styles.input}
+              style={styles.fileInput}
               required
             />
             <span style={styles.hint}>
@@ -272,6 +269,32 @@ const styles = {
     color: "#fff",
     outline: "none",
   },
+  select: {
+    borderRadius: "14px",
+    border: "1px solid rgba(148,163,184,0.2)",
+    padding: "14px 16px",
+    fontSize: "14px",
+    background: "rgba(255,255,255,0.04)",
+    color: "#fff",
+    outline: "none",
+    cursor: "pointer",
+    appearance: "none",
+    WebkitAppearance: "none",
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "right 14px center",
+    paddingRight: "40px",
+  },
+  fileInput: {
+    borderRadius: "14px",
+    border: "1px dashed rgba(148,163,184,0.3)",
+    padding: "14px 16px",
+    fontSize: "14px",
+    background: "rgba(255,255,255,0.02)",
+    color: "#94a3b8",
+    outline: "none",
+    cursor: "pointer",
+  },
   row: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -286,6 +309,7 @@ const styles = {
     fontWeight: 700,
     background: "linear-gradient(135deg, #4f7cff, #7c3aed)",
     color: "#fff",
+    marginTop: "8px",
   },
   hint: {
     fontSize: "12px",
