@@ -13,7 +13,7 @@ function Leaderboard() {
     const loadLeaderboard = async () => {
       try {
         const [creatorsSnap, promotersSnap] = await Promise.all([
-          getDocs(query(collection(db, "users"), orderBy("totalRevenue", "desc"), limit(20))),
+          getDocs(query(collection(db, "users"), where("role", "==", "creator"), orderBy("totalRevenue", "desc"), limit(20))),
           getDocs(query(collection(db, "promoters"), where("status", "==", "approved"), orderBy("totalClicks", "desc"), limit(20))),
         ]);
         setTopCreators(creatorsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
