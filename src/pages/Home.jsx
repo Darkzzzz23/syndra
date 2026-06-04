@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getApprovedProducts } from "../services/productService";
-
+import SEO from "../components/SEO";
 function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
 
@@ -17,6 +17,7 @@ function Home() {
     loadFeatured();
   }, []);
 
+<SEO title="Create. Promote. Earn." description="The marketplace where creators sell digital products, promoters earn commissions, and customers discover quality downloads." />
   return (
     <div style={styles.page}>
       {/* HERO */}

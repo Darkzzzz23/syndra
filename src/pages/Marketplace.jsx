@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getApprovedProducts } from "../services/productService";
+import SEO from "../components/SEO";
 
 function Marketplace() {
   const [products, setProducts] = useState([]);
@@ -20,6 +21,7 @@ function Marketplace() {
 
     loadProducts();
   }, []);
+  <SEO title="Marketplace" description="Browse approved digital products from creators across the platform." />
 
   return (
     <div style={styles.page}>

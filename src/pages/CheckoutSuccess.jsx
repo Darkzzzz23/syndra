@@ -3,6 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { createOrder, getReferralFromCookie } from "../services/orderService";
+import { generateDownloadToken } from "../services/downloadService";
 
 function CheckoutSuccess() {
   const [searchParams] = useSearchParams();
@@ -10,6 +11,9 @@ function CheckoutSuccess() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [orderCreated, setOrderCreated] = useState(false);
+ const [downloadToken, setDownloadToken] = useState("");
+const [orderId, setOrderId] = useState("");
+  
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -24,12 +28,11 @@ function CheckoutSuccess() {
           const productData = { id: snap.id, ...snap.data() };
           setProduct(productData);
 
-          // Create the order
           if (!orderCreated) {
             const promoterSlug = getReferralFromCookie();
-            const customerEmail = "customer@email.com"; // In production, get from Stripe session
+            const customerEmail = "customer@email.com";
 
-            await createOrder({
+            const orderData = await createOrder({
               productId: productData.id,
               productTitle: productData.title || productData.name,
               customerId: "guest",
@@ -38,6 +41,10 @@ function CheckoutSuccess() {
               amount: productData.price || 0,
               promoterSlug: promoterSlug,
             });
+
+            setOrderId(orderData.id);
+            const token = await generateDownloadToken(productData.id, orderData.id);
+            setDownloadToken(token);
             setOrderCreated(true);
           }
         }
@@ -59,14 +66,27 @@ function CheckoutSuccess() {
           <p style={styles.subtitle}>Thank you for your purchase. Your download is ready.</p>
 
           {loading ? (
-            <p style={styles.loading}>Loading your product...</p>
+            <p style={styles.loading}>Preparing your download...</p>
           ) : product ? (
             <div style={styles.productInfo}>
               <h2 style={styles.productTitle}>{product.title || product.name}</h2>
               <p style={styles.productDesc}>{product.description?.slice(0, 150)}...</p>
 
-              {product.fileUrl ? (
-                <a href={product.fileUrl} target="_blank" rel="noopener noreferrer" style={styles.downloadBtn} download>
+              {downloadToken ? (
+                <a
+                  href={`/download/${orderId}?token=${downloadToken}`}
+                  style={styles.downloadBtn}
+                >
+                  📥 Download Your File
+                </a>
+              ) : product.fileUrl ? (
+                <a
+                  href={product.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={styles.downloadBtn}
+                  download
+                >
                   📥 Download Your File
                 </a>
               ) : (

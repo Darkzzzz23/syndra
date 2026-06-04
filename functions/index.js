@@ -7,10 +7,123 @@ admin.initializeApp();
 const db = admin.firestore();
 
 const app = express();
+
+// Stripe webhook needs raw body
+const stripe = require("stripe")(functions.config().stripe?.secret || process.env.STRIPE_SECRET || "");
+
 app.use(cors({ origin: true }));
 
 // Health
 app.get("/health", (req, res) => res.status(200).send("ok"));
+
+// Stripe Webhook
+app.post("/stripe-webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  const sig = req.headers["stripe-signature"];
+  const endpointSecret = functions.config().stripe?.webhook_secret || "";
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    console.error("Webhook signature verification failed:", err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle checkout completion
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object;
+    
+    try {
+      const productId = session.metadata?.productId;
+      const creatorId = session.metadata?.creatorId;
+      const promoterSlug = session.metadata?.promoterSlug || null;
+      const customerEmail = session.customer_email || "unknown";
+      const customerId = session.customer || "guest";
+      const amount = (session.amount_total || 0) / 100;
+
+      if (!productId || !creatorId) {
+        console.error("Missing metadata in session:", session.id);
+        return res.status(200).send("Missing metadata");
+      }
+
+      // Get product
+      const productSnap = await db.collection("products").doc(productId).get();
+      if (!productSnap.exists) {
+        console.error("Product not found:", productId);
+        return res.status(200).send("Product not found");
+      }
+      const productData = productSnap.data();
+
+      // Calculate commissions
+      const settingsSnap = await db.collection("settings").doc("commissions").get();
+      const settings = settingsSnap.exists ? settingsSnap.data() : { creator: 70, promoter: 20, syndra: 10 };
+      const total = settings.creator + settings.promoter + settings.syndra;
+      const commissions = {
+        creator: Math.round((amount * settings.creator / total) * 100) / 100,
+        promoter: Math.round((amount * settings.promoter / total) * 100) / 100,
+        syndra: Math.round((amount * settings.syndra / total) * 100) / 100,
+      };
+
+      // Create order
+      const orderRef = db.collection("orders").doc();
+      await orderRef.set({
+        productId,
+        productTitle: productData.title || productData.name,
+        customerId,
+        customerEmail,
+        creatorId,
+        amount,
+        currency: "usd",
+        commissions,
+        promoterSlug,
+        status: "completed",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        downloadAccessed: false,
+      });
+
+      // Update creator
+      await db.collection("users").doc(creatorId).set({
+        totalRevenue: admin.firestore.FieldValue.increment(commissions.creator),
+        totalSales: admin.firestore.FieldValue.increment(1),
+      }, { merge: true });
+
+      // Update promoter
+      if (promoterSlug) {
+        const promoterQ = await db.collection("promoters").where("slug", "==", promoterSlug).limit(1).get();
+        if (!promoterQ.empty) {
+          const promoterDoc = promoterQ.docs[0];
+          await promoterDoc.ref.set({
+            totalEarnings: admin.firestore.FieldValue.increment(commissions.promoter),
+            totalSales: admin.firestore.FieldValue.increment(1),
+          }, { merge: true });
+        }
+      }
+
+      // Update product sales
+      await db.collection("products").doc(productId).set({
+        totalSales: admin.firestore.FieldValue.increment(1),
+      }, { merge: true });
+
+      // Update platform revenue
+      const platformRef = db.collection("platform").doc("revenue");
+      await platformRef.set({
+        totalPlatformRevenue: admin.firestore.FieldValue.increment(commissions.syndra),
+        totalCreatorRevenue: admin.firestore.FieldValue.increment(commissions.creator),
+        totalPromoterRevenue: admin.firestore.FieldValue.increment(commissions.promoter),
+        totalTransactions: admin.firestore.FieldValue.increment(1),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      console.log("Order created via webhook:", orderRef.id);
+    } catch (err) {
+      console.error("Webhook processing failed:", err);
+    }
+  }
+
+  res.status(200).send("OK");
+});
+
+app.use(express.json());
 
 // Redirect + logging endpoint
 app.get("/go/:slug", async (req, res) => {
@@ -29,7 +142,6 @@ app.get("/go/:slug", async (req, res) => {
       }
     }
 
-    // Resolve product by id or slug to support both Firestore layouts.
     const productDoc = await db.collection("products").doc(slug).get();
     let productSnapshot = productDoc.exists ? productDoc : null;
 
@@ -102,4 +214,4 @@ app.get("/go/:slug", async (req, res) => {
   }
 });
 
-exports.api = functions.https.onRequest(app);
+exports.api = functions.https.onRequest(app)

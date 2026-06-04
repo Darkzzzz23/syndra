@@ -26,6 +26,7 @@ import Contact from "./pages/Contact";
 import Wallet from "./pages/Wallet";
 import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
+import Download from "./pages/Download";
 
 function App() {
   const { currentUser, userProfile } = useContext(AuthContext);
@@ -63,6 +64,7 @@ function App() {
           <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/download/:orderId" element={<Download />} />
         </Routes>
       </div>
     </div>
