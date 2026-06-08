@@ -62,7 +62,7 @@ function Marketplace() {
                   </div>
                   <h2 style={styles.productTitle}>{product.title || product.name}</h2>
                   <p style={styles.description}>{product.description}</p>
-                  <p style={styles.creator}>By {product.creatorEmail || "Creator"}</p>
+                  <p style={styles.creator}>By {product.creatorEmail?.split("@")[0] || "Creator"}</p>
                   <Link to={`/product/${product.id}`} style={styles.detailsBtn}>
                     View Details
                   </Link>
