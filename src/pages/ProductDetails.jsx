@@ -184,7 +184,7 @@ function ProductDetails() {
               reviews.map((r) => (
                 <div key={r.id} style={styles.reviewCard}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontWeight: 600 }}>{r.customerEmail?.split("@")[0] || "Anonymous"}</span>
+                    <span style={{ fontWeight: 600 }}>{r.displayName || r.customerEmail?.split("@")[0] || "Anonymous"}</span>
                     <span style={{ color: "#fbbf24" }}>
                       {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
                     </span>
