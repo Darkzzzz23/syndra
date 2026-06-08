@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getApprovedProducts } from "../services/productService";
-import SEO from "../components/SEO";
 
 function Marketplace() {
   const [products, setProducts] = useState([]);
@@ -21,7 +20,6 @@ function Marketplace() {
 
     loadProducts();
   }, []);
-  <SEO title="Marketplace" description="Browse approved digital products from creators across the platform." />
 
   return (
     <div style={styles.page}>
@@ -62,7 +60,7 @@ function Marketplace() {
                   </div>
                   <h2 style={styles.productTitle}>{product.title || product.name}</h2>
                   <p style={styles.description}>{product.description}</p>
-                  <p style={styles.creator}>By {product.creatorEmail?.split("@")[0] || "Creator"}</p>
+                  <p style={styles.creator}>By {product.creatorDisplayName || product.creatorEmail?.split("@")[0] || "Creator"}</p>
                   <Link to={`/product/${product.id}`} style={styles.detailsBtn}>
                     View Details
                   </Link>

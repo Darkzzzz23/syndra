@@ -4,7 +4,6 @@ import { getProductById } from "../services/productService";
 import { saveReferralCookie, getReferralFromCookie } from "../services/orderService";
 import { createCheckoutSession } from "../services/stripeService";
 import { submitReview, getProductReviews } from "../services/reviewService";
-import SEO from "../components/SEO";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -19,7 +18,7 @@ function ProductDetails() {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
-<SEO title={product?.title} description={product?.description?.slice(0, 160)} image={product?.thumbnailUrl} url={`https://syndrahub.com/product/${product?.id}`} />
+
   useEffect(() => {
     const ref = searchParams.get("ref");
     if (ref) {
@@ -130,7 +129,7 @@ function ProductDetails() {
           <div style={styles.infoGrid}>
             <div style={styles.infoBlock}>
               <p style={styles.infoLabel}>Creator</p>
-              <p style={styles.infoValue}>{product.creatorEmail || "Creator"}</p>
+              <p style={styles.infoValue}>{product.creatorDisplayName || product.creatorEmail?.split("@")[0] || "Creator"}</p>
             </div>
             <div style={styles.infoBlock}>
               <p style={styles.infoLabel}>Status</p>
@@ -144,7 +143,6 @@ function ProductDetails() {
             </div>
           </div>
 
-          {/* REVIEWS SECTION */}
           <div style={styles.reviewsSection}>
             <div style={styles.reviewsHeader}>
               <h3 style={styles.reviewsTitle}>

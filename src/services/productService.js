@@ -8,10 +8,7 @@ export const uploadProductFile = async (ownerUid, file) => {
   return await uploadToCloudinary(file);
 };
 
-export const createProduct = async ({ 
-  title, description, category, price, ownerUid, creatorEmail, 
-  fileUrl, thumbnailUrl = "", previewUrls = [] 
-}) => {
+export const createProduct = async ({ title, description, category, price, ownerUid, creatorEmail, fileUrl, thumbnailUrl = "", previewUrls = [] }) => {
   const productRef = doc(productsCollection);
   const productData = {
     title,
@@ -22,6 +19,7 @@ export const createProduct = async ({
     ownerUid,
     creatorId: ownerUid,
     creatorEmail,
+    creatorDisplayName: creatorEmail?.split("@")[0] || "Creator",
     fileUrl,
     thumbnailUrl,
     previewUrls,
