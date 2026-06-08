@@ -34,7 +34,7 @@ import {
   updateWithdrawalStatus,
   markWithdrawalPaid,
 } from "../services/withdrawalService";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, setDoc } from "firebase/firestore";
 import { db } from "../firebase/config";
 
 function Admin() {
@@ -51,6 +51,7 @@ function Admin() {
   const [approvedProducts, setApprovedProducts] = useState([]);
   const [pendingPromoters, setPendingPromoters] = useState([]);
   const [approvedPromoters, setApprovedPromoters] = useState([]);
+  const [pendingCreators, setPendingCreators] = useState([]);
   const [pendingWithdrawals, setPendingWithdrawals] = useState([]);
   const [approvedWithdrawals, setApprovedWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +75,7 @@ function Admin() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [overview, users, clicks, top, pending, approved, pendingPromos, approvedPromos] =
+        const [overview, users, clicks, top, pending, approved, pendingPromos, approvedPromos, pendingCreatorsSnap] =
           await Promise.all([
             getAdminOverview(),
             getRecentUsers(5),
@@ -84,6 +85,7 @@ function Admin() {
             getApprovedProducts(),
             getPendingPromoters(),
             getApprovedPromoters(10),
+            getDocs(query(collection(db, "users"), where("creatorStatus", "==", "pending_review"))),
           ]);
 
         setStats(overview);
@@ -94,6 +96,7 @@ function Admin() {
         setApprovedProducts(approved);
         setPendingPromoters(pendingPromos);
         setApprovedPromoters(approvedPromos);
+        setPendingCreators(pendingCreatorsSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
         await refreshWithdrawals();
       } catch (error) {
         console.error("Error loading admin dashboard:", error);
@@ -197,6 +200,16 @@ function Admin() {
     } finally {
       setUpdatingProductId(null);
     }
+  };
+
+  const handleCreatorApprove = async (uid) => {
+    await setDoc(doc(db, "users", uid), { creatorStatus: "approved" }, { merge: true });
+    setPendingCreators((prev) => prev.filter((c) => c.id !== uid));
+  };
+
+  const handleCreatorReject = async (uid) => {
+    await setDoc(doc(db, "users", uid), { creatorStatus: "rejected" }, { merge: true });
+    setPendingCreators((prev) => prev.filter((c) => c.id !== uid));
   };
 
   const handleWithdrawApprove = async (id) => {
@@ -391,6 +404,32 @@ function Admin() {
           </div>
         </>
       )}
+
+      {/* CREATOR APPROVALS */}
+      <div style={styles.section}>
+        <h2 style={styles.sectionTitle}>Creator Approvals</h2>
+        <div style={styles.reviewGrid}>
+          {pendingCreators.length > 0 ? (
+            pendingCreators.map((c) => (
+              <div key={c.id} style={styles.reviewCard}>
+                <div style={styles.reviewHeader}>
+                  <div>
+                    <h3 style={styles.reviewTitle}>{c.displayName || c.email?.split("@")[0]}</h3>
+                    <p style={styles.reviewMeta}>{c.email}</p>
+                  </div>
+                  <span style={styles.reviewStatus}>pending</span>
+                </div>
+                <div style={styles.reviewActions}>
+                  <button onClick={() => handleCreatorApprove(c.id)} style={styles.approveBtn}>Approve</button>
+                  <button onClick={() => handleCreatorReject(c.id)} style={styles.rejectBtn}>Reject</button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div style={styles.emptyState}>No pending creator approvals.</div>
+          )}
+        </div>
+      </div>
 
       {/* WITHDRAWAL REQUESTS */}
       {(isOwner || isAdmin) && (
