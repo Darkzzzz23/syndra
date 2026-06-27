@@ -15,6 +15,7 @@ function Dashboard() {
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [deletingProductId, setDeletingProductId] = useState(null);
   const [productCounts, setProductCounts] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
   const [promoterProfile, setPromoterProfile] = useState(null);
   const [promoterProducts, setPromoterProducts] = useState([]);
@@ -104,6 +105,26 @@ function Dashboard() {
             </div>
           </div>
 
+          {/* Onboarding */}
+          {showOnboarding && (
+            <div style={styles.onboardingCard}>
+              <div style={styles.onboardingHeader}>
+                <span style={{ fontSize: "24px" }}>👋</span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "16px" }}>Welcome to Syndra!</h3>
+                  <p style={{ margin: "4px 0 0", color: "#94a3b8", fontSize: "13px" }}>Here's how to get started as a creator.</p>
+                </div>
+                <button onClick={() => setShowOnboarding(false)} style={styles.dismissOnboard}>✕</button>
+              </div>
+              <div style={styles.onboardingSteps}>
+                <span>1️⃣ Upload your first product</span>
+                <span>2️⃣ Wait for admin approval</span>
+                <span>3️⃣ Share your product page or let promoters do it</span>
+                <span>4️⃣ Earn 70% on every sale</span>
+              </div>
+            </div>
+          )}
+
           {creatorStatus === "pending_review" && (
             <div style={styles.pendingBanner}>⏳ Your creator account is under review. You'll be able to upload once approved.</div>
           )}
@@ -131,11 +152,30 @@ function Dashboard() {
                         <span style={styles.statusPill}>{p.status}</span>
                         <div style={styles.productActions}>
                           <Link to={`/product/${p.id}`} style={styles.viewBtn}>View</Link>
+                          <Link to={`/edit-product/${p.id}`} style={styles.editBtn}>Edit</Link>
                           <button onClick={() => handleDelete(p.id)} disabled={deletingProductId === p.id} style={styles.deleteBtn}>{deletingProductId === p.id ? "…" : "Delete"}</button>
                         </div>
                       </div>
                     </div>
                   )) : <div style={styles.emptyCard}><h3>No products yet</h3><p>Upload your first digital product to get started.</p><Link to="/upload-product" style={styles.uploadBtn}>Upload Now</Link></div>}
+                </div>
+              </section>
+
+              <section style={styles.section}>
+                <h2 style={styles.sectionTitle}>Recent Sales</h2>
+                <div style={styles.grid}>
+                  {creatorProducts.some(p => p.totalSales > 0) ? (
+                    creatorProducts.filter(p => p.totalSales > 0).map(p => (
+                      <div key={p.id} style={styles.reviewMiniCard}>
+                        <p style={styles.reviewProductName}>{p.title || p.name}</p>
+                        <p style={{ color: "#94a3b8", fontSize: "13px", marginTop: "6px" }}>
+                          {p.totalSales || 0} sale{(p.totalSales || 0) !== 1 ? "s" : ""} · ${((p.totalSales || 0) * (p.price || 0) * 0.7).toFixed(2)} earned
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={styles.emptyCard}><p>No sales yet. Promote your products or wait for promoters to share them.</p></div>
+                  )}
                 </div>
               </section>
 
@@ -177,6 +217,27 @@ function Dashboard() {
             </div>
             <div style={styles.headerActions}>{isApproved && <Link to="/promote" style={styles.uploadBtn}>Promote Products</Link>}<button onClick={logout} style={styles.logoutBtn}>Sign Out</button></div>
           </div>
+
+          {/* Onboarding */}
+          {showOnboarding && (
+            <div style={styles.onboardingCard}>
+              <div style={styles.onboardingHeader}>
+                <span style={{ fontSize: "24px" }}>👋</span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "16px" }}>Welcome to Syndra!</h3>
+                  <p style={{ margin: "4px 0 0", color: "#94a3b8", fontSize: "13px" }}>Here's how to start earning as a promoter.</p>
+                </div>
+                <button onClick={() => setShowOnboarding(false)} style={styles.dismissOnboard}>✕</button>
+              </div>
+              <div style={styles.onboardingSteps}>
+                <span>1️⃣ Browse products on the Promote page</span>
+                <span>2️⃣ Copy your unique referral link</span>
+                <span>3️⃣ Share on social media, groups, or anywhere</span>
+                <span>4️⃣ Earn 20% commission on every sale</span>
+              </div>
+            </div>
+          )}
+
           {isPending && <div style={styles.pendingBanner}>⏳ Your promoter application is being reviewed.</div>}
           {!isApproved && !isPending && <div style={styles.applyCard}><h3>You haven't applied yet</h3><p>Submit your application to start promoting.</p><Link to="/apply-promoter" style={styles.uploadBtn}>Apply Now</Link></div>}
           {isApproved && (
@@ -184,6 +245,7 @@ function Dashboard() {
               <div style={styles.statusGrid}>
                 <div style={styles.statusCard}><p style={styles.cardTitle}>Total Clicks</p><p style={styles.cardValue}>{promoterProfile?.totalClicks || 0}</p></div>
                 <div style={styles.statusCard}><p style={styles.cardTitle}>Total Sales</p><p style={styles.cardValue}>{promoterProfile?.totalSales || 0}</p></div>
+                <div style={styles.statusCard}><p style={styles.cardTitle}>Conversion</p><p style={styles.cardValue}>{promoterProfile?.totalClicks > 0 ? `${((promoterProfile.totalSales / promoterProfile.totalClicks) * 100).toFixed(1)}%` : "0%"}</p></div>
                 <div style={styles.statusCard}><p style={styles.cardTitle}>Earnings</p><p style={styles.cardValue}>${(promoterProfile?.totalEarnings || 0).toFixed(2)}</p></div>
               </div>
               <section style={styles.section}>
@@ -212,6 +274,26 @@ function Dashboard() {
           <div style={styles.headerLeft}><div style={styles.avatar}>{userProfile?.profileImage ? <img src={userProfile.profileImage} alt="" style={styles.avatarImg} /> : <span style={styles.avatarPlaceholder}>👤</span>}</div><div><h1 style={styles.title}>{userProfile?.displayName || userName}</h1><p style={styles.subtitle}>Buyer · Discover digital products</p></div></div>
           <button onClick={logout} style={styles.logoutBtn}>Sign Out</button>
         </div>
+
+        {showOnboarding && (
+          <div style={styles.onboardingCard}>
+            <div style={styles.onboardingHeader}>
+              <span style={{ fontSize: "24px" }}>👋</span>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "16px" }}>Welcome to Syndra!</h3>
+                <p style={{ margin: "4px 0 0", color: "#94a3b8", fontSize: "13px" }}>Discover digital products from creators.</p>
+              </div>
+              <button onClick={() => setShowOnboarding(false)} style={styles.dismissOnboard}>✕</button>
+            </div>
+            <div style={styles.onboardingSteps}>
+              <span>🛍️ Browse the marketplace</span>
+              <span>💳 Purchase with secure checkout</span>
+              <span>📥 Download instantly</span>
+              <span>⭐ Leave reviews for products you love</span>
+            </div>
+          </div>
+        )}
+
         <div style={styles.buyerCard}><div style={{ fontSize: "48px", marginBottom: "16px" }}>🛍️</div><h2>Ready to explore?</h2><p style={{ color: "#94a3b8", marginBottom: "24px" }}>Browse the marketplace to find worksheets, ebooks, digital art, and more.</p><Link to="/marketplace" style={styles.uploadBtn}>Browse Marketplace</Link></div>
         <div style={{ ...styles.section, marginTop: "32px" }}><h2 style={styles.sectionTitle}>Your Purchases</h2><div style={styles.emptyCard}><p>No purchases yet.</p></div></div>
         <Link to="/settings" style={styles.settingsCard}><div style={styles.settingsCardContent}><span style={styles.settingsIcon}>⚙️</span><div><p style={styles.settingsTitle}>Settings</p><p style={styles.settingsSub}>Edit profile, switch role, account</p></div><span style={styles.settingsArrow}>→</span></div></Link>
@@ -233,24 +315,25 @@ const styles = {
   subtitle: { color: "#94a3b8", marginTop: "4px", maxWidth: "720px", lineHeight: 1.5, fontSize: "14px" },
   logoutBtn: { padding: "12px 20px", borderRadius: "14px", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#fca5a5", cursor: "pointer", fontWeight: 600 },
   uploadBtn: { padding: "12px 20px", borderRadius: "14px", background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff", textDecoration: "none", fontWeight: 700, border: "none", cursor: "pointer", fontSize: "14px" },
-  statusGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "18px", marginBottom: "32px" },
-  statusCard: { padding: "24px", background: "rgba(255,255,255,0.05)", borderRadius: "22px", border: "1px solid rgba(79,124,255,0.14)" },
-  cardTitle: { color: "#94a3b8", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "10px" },
-  cardValue: { fontSize: "34px", fontWeight: 800, margin: 0 },
+  statusGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px", marginBottom: "32px" },
+  statusCard: { padding: "20px", background: "rgba(255,255,255,0.05)", borderRadius: "18px", border: "1px solid rgba(79,124,255,0.14)" },
+  cardTitle: { color: "#94a3b8", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px" },
+  cardValue: { fontSize: "28px", fontWeight: 800, margin: 0 },
   section: { marginTop: "24px" },
-  sectionTitle: { fontSize: "28px", marginBottom: "18px" },
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "18px" },
-  productCard: { padding: "22px", background: "rgba(255,255,255,0.06)", borderRadius: "18px", border: "1px solid rgba(79,124,255,0.14)", display: "flex", flexDirection: "column", gap: "12px" },
+  sectionTitle: { fontSize: "24px", marginBottom: "16px" },
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "16px" },
+  productCard: { padding: "20px", background: "rgba(255,255,255,0.06)", borderRadius: "16px", border: "1px solid rgba(79,124,255,0.14)", display: "flex", flexDirection: "column", gap: "10px" },
   productHeader: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" },
-  productTitle: { margin: 0, fontSize: "18px", fontWeight: 700 },
-  productBadge: { padding: "6px 12px", background: "rgba(79,124,255,0.16)", borderRadius: "999px", color: "#a5b4ff", fontSize: "13px", fontWeight: 600 },
-  productDesc: { color: "#cbd5e1", lineHeight: 1.75, flex: 1 },
-  productFooter: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap", marginTop: "8px" },
-  productActions: { display: "flex", gap: "8px" },
-  statusPill: { padding: "6px 12px", borderRadius: "999px", background: "rgba(255,255,255,0.08)", color: "#94a3b8", fontSize: "12px", textTransform: "capitalize", fontWeight: 600 },
-  viewBtn: { padding: "8px 14px", borderRadius: "10px", background: "rgba(79,124,255,0.15)", color: "#a5b4ff", textDecoration: "none", fontSize: "13px", fontWeight: 600 },
+  productTitle: { margin: 0, fontSize: "16px", fontWeight: 700 },
+  productBadge: { padding: "5px 10px", background: "rgba(79,124,255,0.16)", borderRadius: "999px", color: "#a5b4ff", fontSize: "12px", fontWeight: 600 },
+  productDesc: { color: "#cbd5e1", lineHeight: 1.6, flex: 1, fontSize: "13px" },
+  productFooter: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap", marginTop: "6px" },
+  productActions: { display: "flex", gap: "6px" },
+  statusPill: { padding: "5px 10px", borderRadius: "999px", background: "rgba(255,255,255,0.08)", color: "#94a3b8", fontSize: "11px", textTransform: "capitalize", fontWeight: 600 },
+  viewBtn: { padding: "7px 12px", borderRadius: "8px", background: "rgba(79,124,255,0.15)", color: "#a5b4ff", textDecoration: "none", fontSize: "12px", fontWeight: 600 },
+  editBtn: { padding: "7px 12px", borderRadius: "8px", background: "rgba(251,191,36,0.15)", color: "#fbbf24", textDecoration: "none", fontSize: "12px", fontWeight: 600 },
   copyBtn: { padding: "10px 16px", background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "white", border: "none", borderRadius: "12px", cursor: "pointer", fontWeight: 700 },
-  deleteBtn: { padding: "8px 14px", background: "rgba(239,68,68,0.15)", color: "#fca5a5", border: "1px solid rgba(239,68,68,0.5)", borderRadius: "10px", cursor: "pointer", fontWeight: 600, fontSize: "13px" },
+  deleteBtn: { padding: "7px 12px", background: "rgba(239,68,68,0.15)", color: "#fca5a5", border: "1px solid rgba(239,68,68,0.5)", borderRadius: "8px", cursor: "pointer", fontWeight: 600, fontSize: "12px" },
   emptyCard: { gridColumn: "1/-1", padding: "40px", borderRadius: "20px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", textAlign: "center", color: "#94a3b8" },
   pendingBanner: { padding: "20px 24px", borderRadius: "16px", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", color: "#fde68a", marginBottom: "24px", fontWeight: 600 },
   applyCard: { padding: "40px", borderRadius: "20px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.14)", textAlign: "center", marginBottom: "24px" },
@@ -259,6 +342,10 @@ const styles = {
   reviewProductName: { fontSize: "15px", fontWeight: 600, margin: 0 },
   reviewRating: { color: "#fbbf24", marginTop: "6px", fontSize: "14px" },
   reviewLink: { color: "#a5b4ff", textDecoration: "none", fontSize: "13px", display: "inline-block", marginTop: "8px" },
+  onboardingCard: { padding: "20px 24px", borderRadius: "16px", background: "rgba(79,124,255,0.08)", border: "1px solid rgba(79,124,255,0.2)", marginBottom: "24px" },
+  onboardingHeader: { display: "flex", alignItems: "center", gap: "14px", marginBottom: "16px" },
+  dismissOnboard: { marginLeft: "auto", background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "16px" },
+  onboardingSteps: { display: "flex", flexDirection: "column", gap: "8px", fontSize: "13px", color: "#cbd5e1", paddingLeft: "8px" },
   settingsCard: { display: "block", marginTop: "32px", padding: "20px 24px", borderRadius: "16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(79,124,255,0.1)", textDecoration: "none" },
   settingsCardContent: { display: "flex", alignItems: "center", gap: "16px" },
   settingsIcon: { fontSize: "24px" },

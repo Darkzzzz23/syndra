@@ -120,6 +120,22 @@ function Settings() {
             </span>
           </div>
         </div>
+        {/* PAYOUT SECTION */}
+<div style={styles.section}>
+  <h2 style={styles.sectionTitle}>Payout Details</h2>
+  <p style={styles.sectionDesc}>Where we'll send your earnings.</p>
+  <div style={styles.infoRow}>
+    <span style={styles.infoLabel}>PayPal</span>
+    <span style={styles.infoValue}>{userProfile?.payoutDetails?.paypalEmail || "Not set"}</span>
+  </div>
+  <div style={styles.infoRow}>
+    <span style={styles.infoLabel}>Crypto Wallet</span>
+    <span style={styles.infoValue}>{userProfile?.payoutDetails?.cryptoWallet || "Not set"}</span>
+  </div>
+  <button onClick={() => navigate("/choose-role")} style={{ ...styles.saveBtn, marginTop: "12px" }}>
+    Update Payout Details
+  </button>
+</div>
 
         {/* ROLE SECTION */}
         <div style={styles.section}>

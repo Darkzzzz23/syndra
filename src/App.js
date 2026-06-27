@@ -18,15 +18,16 @@ import CheckoutCancel from "./pages/CheckoutCancel";
 import Legal from "./pages/Legal";
 import ForgotPassword from "./pages/ForgotPassword";
 import Settings from "./pages/Settings";
+import Wallet from "./pages/Wallet";
+import Leaderboard from "./pages/Leaderboard";
+import Contact from "./pages/Contact";
+import Download from "./pages/Download";
+import NotFound from "./pages/NotFound";
+import Signup from "./pages/Signup";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import PromoterRoute from "./components/PromoterRoute";
-import Signup from "./pages/Signup";
-import Contact from "./pages/Contact";
-import Wallet from "./pages/Wallet";
-import Leaderboard from "./pages/Leaderboard";
-import NotFound from "./pages/NotFound";
-import Download from "./pages/Download";
+import EditProduct from "./pages/EditProduct";
 
 function App() {
   const { currentUser, userProfile } = useContext(AuthContext);
@@ -40,6 +41,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/product/:id" element={<ProductDetails />} />
@@ -50,21 +52,23 @@ function App() {
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path="/checkout/cancel" element={<CheckoutCancel />} />
           <Route path="/legal" element={<Legal />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/edit-product/:id" element={<ProtectedRoute allowedRoles={["creator"]}><EditProduct /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+          <Route path="/download/:orderId" element={<Download />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              {currentUser && !hasRole ? <Navigate to="/choose-role" replace /> : <Dashboard />}
+              {currentUser && !hasRole ? <Navigate to="/choose-role" replace /> : 
+               userProfile?.role === "buyer" ? <Navigate to="/marketplace" replace /> : 
+               <Dashboard />}
             </ProtectedRoute>
           } />
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
           <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
           <Route path="/go/:id" element={<Redirect />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="*" element={<NotFound />} />
-          <Route path="/download/:orderId" element={<Download />} />
         </Routes>
       </div>
     </div>
