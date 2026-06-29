@@ -12,7 +12,6 @@ function ProductDetails() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [paid, setPaid] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
 
   const [reviews, setReviews] = useState([]);
@@ -73,7 +72,7 @@ function ProductDetails() {
 
   const handlePayPalApprove = async (data) => {
     // Payment completed
-    setPaid(true);
+
     
     try {
       const promoterSlug = getReferralFromCookie();
