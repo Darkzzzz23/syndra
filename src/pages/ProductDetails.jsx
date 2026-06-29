@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
+import { PayPalButtons } from "@paypal/react-paypal-js";
 import { getProductById } from "../services/productService";
-import { saveReferralCookie, getReferralFromCookie } from "../services/orderService";
-import { createCheckoutSession } from "../services/stripeService";
+import { saveReferralCookie, getReferralFromCookie, createOrder } from "../services/orderService";
 import { submitReview, getProductReviews } from "../services/reviewService";
+import SEO from "../components/SEO";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -11,7 +12,8 @@ function ProductDetails() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [buying, setBuying] = useState(false);
+  const [paid, setPaid] = useState(false);
+  const [orderComplete, setOrderComplete] = useState(false);
 
   const [reviews, setReviews] = useState([]);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -46,27 +48,6 @@ function ProductDetails() {
     loadProduct();
   }, [id, searchParams]);
 
-  const handleBuy = async () => {
-    if (!product) return;
-    setBuying(true);
-
-    try {
-      const promoterSlug = getReferralFromCookie();
-      const customerEmail = prompt("Enter your email for the receipt:", "");
-      if (!customerEmail) {
-        setBuying(false);
-        return;
-      }
-
-      const checkoutUrl = await createCheckoutSession(product, customerEmail, promoterSlug);
-      window.location.href = checkoutUrl;
-    } catch (err) {
-      console.error("Checkout failed:", err);
-      alert("Payment failed. Please try again. " + err.message);
-      setBuying(false);
-    }
-  };
-
   const handleSubmitReview = async () => {
     if (!reviewComment.trim()) return;
     setSubmittingReview(true);
@@ -90,12 +71,31 @@ function ProductDetails() {
     }
   };
 
+  const handlePayPalApprove = async (data) => {
+    // Payment completed
+    setPaid(true);
+    
+    try {
+      const promoterSlug = getReferralFromCookie();
+      await createOrder({
+        productId: product.id,
+        productTitle: product.title || product.name,
+        customerId: "paypal_customer",
+        customerEmail: data.payer?.email_address || "customer@syndra.com",
+        creatorId: product.creatorId || product.ownerUid,
+        amount: product.price || 0,
+        promoterSlug: promoterSlug,
+      });
+      setOrderComplete(true);
+    } catch (err) {
+      console.error("Order creation failed:", err);
+    }
+  };
+
   if (loading) {
     return (
       <div style={styles.page}>
-        <div style={styles.container}>
-          <p>Loading product details…</p>
-        </div>
+        <div style={styles.container}><p>Loading product details…</p></div>
       </div>
     );
   }
@@ -103,16 +103,14 @@ function ProductDetails() {
   if (error) {
     return (
       <div style={styles.page}>
-        <div style={styles.container}>
-          <p>{error}</p>
-          <Link to="/marketplace" style={styles.backLink}>Return to marketplace</Link>
-        </div>
+        <div style={styles.container}><p>{error}</p><Link to="/marketplace" style={styles.backLink}>Return to marketplace</Link></div>
       </div>
     );
   }
 
   return (
     <div style={styles.page}>
+      <SEO title={product?.title} description={product?.description?.slice(0, 160)} image={product?.thumbnailUrl} url={`https://syndrahub.com/product/${product?.id}`} />
       <div style={styles.container}>
         <Link to="/marketplace" style={styles.backLink}>← Back to marketplace</Link>
         <div style={styles.card}>
@@ -143,11 +141,47 @@ function ProductDetails() {
             </div>
           </div>
 
+          {/* PAYPAL BUTTONS */}
+          <div style={{ marginTop: "28px" }}>
+            {orderComplete ? (
+              <div style={styles.successBox}>
+                <span style={{ fontSize: "32px" }}>✅</span>
+                <h3>Payment Successful!</h3>
+                <p>Your download is ready.</p>
+                {product.fileUrl && (
+                  <a href={product.fileUrl} target="_blank" rel="noopener noreferrer" style={styles.downloadBtn} download>
+                    📥 Download Your File
+                  </a>
+                )}
+              </div>
+            ) : (
+              <PayPalButtons
+                style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
+                createOrder={(data, actions) => {
+                  return actions.order.create({
+                    purchase_units: [{
+                      amount: { value: (product.price || 0).toFixed(2) },
+                      description: product.title || product.name,
+                    }],
+                  });
+                }}
+                onApprove={(data, actions) => {
+                  return actions.order.capture().then((details) => {
+                    handlePayPalApprove(details);
+                  });
+                }}
+                onError={(err) => {
+                  console.error("PayPal error:", err);
+                  alert("Payment failed. Please try again.");
+                }}
+              />
+            )}
+          </div>
+
+          {/* REVIEWS */}
           <div style={styles.reviewsSection}>
             <div style={styles.reviewsHeader}>
-              <h3 style={styles.reviewsTitle}>
-                Reviews {product.averageRating ? `(${product.averageRating}★)` : ""}
-              </h3>
+              <h3 style={styles.reviewsTitle}>Reviews {product.averageRating ? `(${product.averageRating}★)` : ""}</h3>
               <button onClick={() => setShowReviewForm(!showReviewForm)} style={styles.reviewBtn}>
                 {showReviewForm ? "Cancel" : "Write a Review"}
               </button>
@@ -157,21 +191,10 @@ function ProductDetails() {
               <div style={styles.reviewForm}>
                 <div style={styles.starsRow}>
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <span
-                      key={star}
-                      onClick={() => setReviewRating(star)}
-                      style={{ cursor: "pointer", fontSize: "24px", color: star <= reviewRating ? "#fbbf24" : "#475569" }}
-                    >
-                      ★
-                    </span>
+                    <span key={star} onClick={() => setReviewRating(star)} style={{ cursor: "pointer", fontSize: "24px", color: star <= reviewRating ? "#fbbf24" : "#475569" }}>★</span>
                   ))}
                 </div>
-                <textarea
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  placeholder="Share your thoughts..."
-                  style={{ ...styles.reviewInput, minHeight: "80px", marginTop: "10px" }}
-                />
+                <textarea value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} placeholder="Share your thoughts..." style={{ ...styles.reviewInput, minHeight: "80px", marginTop: "10px" }} />
                 <button onClick={handleSubmitReview} disabled={submittingReview} style={styles.submitReviewBtn}>
                   {submittingReview ? "Submitting..." : "Submit Review"}
                 </button>
@@ -183,9 +206,7 @@ function ProductDetails() {
                 <div key={r.id} style={styles.reviewCard}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span style={{ fontWeight: 600 }}>{r.displayName || r.customerEmail?.split("@")[0] || "Anonymous"}</span>
-                    <span style={{ color: "#fbbf24" }}>
-                      {"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}
-                    </span>
+                    <span style={{ color: "#fbbf24" }}>{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
                   </div>
                   <p style={{ color: "#cbd5e1", marginTop: "6px", fontSize: "14px" }}>{r.comment}</p>
                 </div>
@@ -194,10 +215,6 @@ function ProductDetails() {
               <p style={{ color: "#64748b", fontSize: "14px" }}>No reviews yet. Be the first!</p>
             )}
           </div>
-
-          <button onClick={handleBuy} disabled={buying} style={styles.buyBtn}>
-            {buying ? "Redirecting to Stripe…" : `Buy Now — $${product.price?.toFixed(2) ?? "0.00"}`}
-          </button>
         </div>
       </div>
     </div>
@@ -218,6 +235,8 @@ const styles = {
   infoBlock: { padding: "20px", borderRadius: "18px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.1)" },
   infoLabel: { margin: 0, color: "#94a3b8", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.12em" },
   infoValue: { margin: "10px 0 0", fontSize: "16px", fontWeight: 600 },
+  successBox: { padding: "32px", borderRadius: "16px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.3)", textAlign: "center" },
+  downloadBtn: { display: "inline-block", marginTop: "16px", padding: "14px 24px", borderRadius: "12px", background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", textDecoration: "none", fontWeight: 700 },
   reviewsSection: { marginTop: "28px", borderTop: "1px solid rgba(79,124,255,0.1)", paddingTop: "24px" },
   reviewsHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" },
   reviewsTitle: { fontSize: "18px", margin: 0 },
@@ -227,7 +246,6 @@ const styles = {
   reviewInput: { borderRadius: "14px", border: "1px solid rgba(148,163,184,0.2)", padding: "14px 16px", fontSize: "14px", background: "rgba(255,255,255,0.04)", color: "#fff", outline: "none", width: "100%" },
   submitReviewBtn: { padding: "10px 20px", borderRadius: "14px", border: "none", background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff", cursor: "pointer", fontWeight: 700, marginTop: "10px" },
   reviewCard: { padding: "14px", borderRadius: "12px", background: "rgba(255,255,255,0.03)", marginBottom: "8px" },
-  buyBtn: { marginTop: "32px", width: "100%", padding: "16px 24px", borderRadius: "16px", border: "none", background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff", fontSize: "16px", fontWeight: 700, cursor: "pointer" },
 };
 
 export default ProductDetails;
