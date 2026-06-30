@@ -43,13 +43,13 @@ export const updateCommissionSettings = async (newSettings) => {
 };
 
 // Calculate commissions based on settings
-export const calculateCommissionsFromSettings = async (amount) => {
+export const calculateCommissionsFromSettings = async (amount, promoterRate = 20) => {
   const settings = await getCommissionSettings();
-  const total = settings.creator + settings.promoter + settings.syndra;
-  
+  const syndraRate = 100 - settings.creator - promoterRate;
+
   return {
-    creator: Math.round((amount * settings.creator / total) * 100) / 100,
-    promoter: Math.round((amount * settings.promoter / total) * 100) / 100,
-    syndra: Math.round((amount * settings.syndra / total) * 100) / 100,
+    creator: Math.round((amount * settings.creator / 100) * 100) / 100,
+    promoter: Math.round((amount * promoterRate / 100) * 100) / 100,
+    syndra: Math.round((amount * syndraRate / 100) * 100) / 100,
   };
 };

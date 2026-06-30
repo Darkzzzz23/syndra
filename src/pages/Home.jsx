@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { getApprovedProducts } from "../services/productService";
+import { saveReferralCookie } from "../services/orderService";
 import SEO from "../components/SEO";
 
 function Home() {
@@ -11,6 +12,7 @@ function Home() {
   const [sortBy, setSortBy] = useState("newest");
   const [sortOpen, setSortOpen] = useState(false);
   const sortRef = useRef(null);
+  const [searchParams] = useSearchParams();
 
   const categories = ["All", "Worksheets", "Study Guides", "E-books", "Digital Art", "Templates", "Printables", "Other"];
   const sortOptions = [
@@ -21,6 +23,11 @@ function Home() {
   ];
 
   useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      saveReferralCookie(ref);
+    }
+
     const handleClick = (e) => {
       if (sortRef.current && !sortRef.current.contains(e.target)) {
         setSortOpen(false);
@@ -28,7 +35,7 @@ function Home() {
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     const load = async () => {
