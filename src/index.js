@@ -13,9 +13,9 @@ root.render(
     <HelmetProvider>
       <BrowserRouter>
         <PayPalScriptProvider options={{ 
-          clientId: process.env.REACT_APP_PAYPAL_CLIENT_ID,
-          currency: "USD",
-          intent: "capture"
+          clientId: process.env.REACT_APP_PAYPAL_CLIENT_ID, 
+          currency: "USD", 
+          intent: "capture" 
         }}>
           <AuthProvider>
             <App />

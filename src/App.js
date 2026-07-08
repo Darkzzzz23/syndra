@@ -28,6 +28,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import PromoterRoute from "./components/PromoterRoute";
 import EditProduct from "./pages/EditProduct";
+import ProPromoter from "./pages/ProPromoter";
 
 function App() {
   const { currentUser, userProfile } = useContext(AuthContext);
@@ -54,6 +55,7 @@ function App() {
           <Route path="/legal" element={<Legal />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/pro-promoter" element={<ProPromoter />} />
           <Route path="/edit-product/:id" element={<ProtectedRoute allowedRoles={["creator"]}><EditProduct /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />

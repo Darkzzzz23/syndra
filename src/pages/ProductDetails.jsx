@@ -22,58 +22,25 @@ function ProductDetails() {
 
   useEffect(() => {
     const ref = searchParams.get("ref");
-    if (ref) {
-      saveReferralCookie(ref);
-    }
+    if (ref) saveReferralCookie(ref);
 
-    const loadProduct = async () => {
+    const load = async () => {
       try {
         const data = await getProductById(id);
-        if (!data || data.status !== "approved") {
-          setError("Product not found or not available.");
-          return;
-        }
+        if (!data || data.status !== "approved") { setError("Product not found."); return; }
         setProduct(data);
-        const productReviews = await getProductReviews(id);
-        setReviews(productReviews);
+        const revs = await getProductReviews(id);
+        setReviews(revs);
       } catch (err) {
-        console.error("Unable to load product details", err);
-        setError("Unable to load product details.");
+        setError("Failed to load product.");
       } finally {
         setLoading(false);
       }
     };
-
-    loadProduct();
+    load();
   }, [id, searchParams]);
 
-  const handleSubmitReview = async () => {
-    if (!reviewComment.trim()) return;
-    setSubmittingReview(true);
-    try {
-      await submitReview({
-        productId: product.id,
-        customerId: "anonymous",
-        customerEmail: "anonymous",
-        rating: reviewRating,
-        comment: reviewComment,
-      });
-      const updated = await getProductReviews(product.id);
-      setReviews(updated);
-      setReviewComment("");
-      setReviewRating(5);
-      setShowReviewForm(false);
-    } catch (err) {
-      console.error("Review failed:", err);
-    } finally {
-      setSubmittingReview(false);
-    }
-  };
-
   const handlePayPalApprove = async (data) => {
-    // Payment completed
-
-    
     try {
       const promoterSlug = getReferralFromCookie();
       await createOrder({
@@ -83,137 +50,103 @@ function ProductDetails() {
         customerEmail: data.payer?.email_address || "customer@syndra.com",
         creatorId: product.creatorId || product.ownerUid,
         amount: product.price || 0,
-        promoterSlug: promoterSlug,
+        promoterSlug,
       });
       setOrderComplete(true);
     } catch (err) {
-      console.error("Order creation failed:", err);
+      console.error("Order failed:", err);
     }
   };
 
-  if (loading) {
-    return (
-      <div style={styles.page}>
-        <div style={styles.container}><p>Loading product details…</p></div>
-      </div>
-    );
-  }
+  const handleSubmitReview = async () => {
+    if (!reviewComment.trim()) return;
+    setSubmittingReview(true);
+    try {
+      await submitReview({ productId: product.id, customerId: "anon", customerEmail: "anon", rating: reviewRating, comment: reviewComment });
+      const updated = await getProductReviews(product.id);
+      setReviews(updated);
+      setReviewComment(""); setReviewRating(5); setShowReviewForm(false);
+    } catch (err) { console.error("Review failed:", err); }
+    finally { setSubmittingReview(false); }
+  };
 
-  if (error) {
-    return (
-      <div style={styles.page}>
-        <div style={styles.container}><p>{error}</p><Link to="/marketplace" style={styles.backLink}>Return to marketplace</Link></div>
-      </div>
-    );
-  }
+  if (loading) return <div style={styles.page}><div style={styles.container}><p>Loading...</p></div></div>;
+  if (error) return <div style={styles.page}><div style={styles.container}><p>{error}</p><Link to="/marketplace" style={styles.backLink}>← Back</Link></div></div>;
 
   return (
     <div style={styles.page}>
-      <SEO title={product?.title} description={product?.description?.slice(0, 160)} image={product?.thumbnailUrl} url={`https://syndrahub.com/product/${product?.id}`} />
+      <SEO title={product?.title} description={product?.description?.slice(0, 160)} />
       <div style={styles.container}>
         <Link to="/marketplace" style={styles.backLink}>← Back to marketplace</Link>
-        <div style={styles.card}>
-          <div style={styles.topRow}>
-            <div>
-              <h1 style={styles.title}>{product.title || product.name}</h1>
-              <p style={styles.category}>{product.category}</p>
-            </div>
-            <div style={styles.pricePanel}>${product.price?.toFixed(2) ?? "0.00"}</div>
+
+        <div style={styles.layout}>
+          {/* Image */}
+          <div style={styles.imageSection}>
+            {product.thumbnailUrl ? (
+              <img src={product.thumbnailUrl} alt={product.title} style={styles.productImage} />
+            ) : (
+              <div style={styles.imagePlaceholder}>📦</div>
+            )}
           </div>
 
-          <p style={styles.description}>{product.description}</p>
+          {/* Info */}
+          <div style={styles.infoSection}>
+            <span style={styles.category}>{product.category}</span>
+            <h1 style={styles.title}>{product.title || product.name}</h1>
+            <p style={styles.creator}>by {product.creatorDisplayName || product.creatorEmail?.split("@")[0]}</p>
+            {product.averageRating > 0 && (
+              <p style={styles.rating}>⭐ {product.averageRating} ({product.totalReviews || 0} reviews)</p>
+            )}
+            <p style={styles.description}>{product.description}</p>
+            <p style={styles.price}>${product.price?.toFixed(2)}</p>
 
-          <div style={styles.infoGrid}>
-            <div style={styles.infoBlock}>
-              <p style={styles.infoLabel}>Creator</p>
-              <p style={styles.infoValue}>{product.creatorDisplayName || product.creatorEmail?.split("@")[0] || "Creator"}</p>
-            </div>
-            <div style={styles.infoBlock}>
-              <p style={styles.infoLabel}>Status</p>
-              <p style={styles.infoValue}>{product.status}</p>
-            </div>
-            <div style={styles.infoBlock}>
-              <p style={styles.infoLabel}>Uploaded</p>
-              <p style={styles.infoValue}>
-                {product.createdAt?.toDate ? product.createdAt.toDate().toLocaleDateString() : "Unknown"}
-              </p>
-            </div>
-          </div>
-
-          {/* PAYPAL BUTTONS */}
-          <div style={{ marginTop: "28px" }}>
             {orderComplete ? (
               <div style={styles.successBox}>
-                <span style={{ fontSize: "32px" }}>✅</span>
-                <h3>Payment Successful!</h3>
-                <p>Your download is ready.</p>
-                {product.fileUrl && (
-                  <a href={product.fileUrl} target="_blank" rel="noopener noreferrer" style={styles.downloadBtn} download>
-                    📥 Download Your File
-                  </a>
-                )}
+                <span>✅</span> Payment successful! Download your file below.
+                {product.fileUrl && <a href={product.fileUrl} style={styles.downloadBtn} download>📥 Download</a>}
               </div>
             ) : (
               <PayPalButtons
                 style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
-                createOrder={(data, actions) => {
-                  return actions.order.create({
-                    purchase_units: [{
-                      amount: { value: (product.price || 0).toFixed(2) },
-                      description: product.title || product.name,
-                    }],
-                  });
-                }}
-                onApprove={(data, actions) => {
-                  return actions.order.capture().then((details) => {
-                    handlePayPalApprove(details);
-                  });
-                }}
-                onError={(err) => {
-                  console.error("PayPal error:", err);
-                  alert("Payment failed. Please try again.");
-                }}
+                createOrder={(data, actions) => actions.order.create({
+                  purchase_units: [{ amount: { value: (product.price || 0).toFixed(2) }, description: product.title }],
+                })}
+                onApprove={(data, actions) => actions.order.capture().then(details => handlePayPalApprove(details))}
+                onError={err => { console.error("PayPal error:", err); alert("Payment failed."); }}
               />
             )}
-          </div>
 
-          {/* REVIEWS */}
-          <div style={styles.reviewsSection}>
-            <div style={styles.reviewsHeader}>
-              <h3 style={styles.reviewsTitle}>Reviews {product.averageRating ? `(${product.averageRating}★)` : ""}</h3>
-              <button onClick={() => setShowReviewForm(!showReviewForm)} style={styles.reviewBtn}>
-                {showReviewForm ? "Cancel" : "Write a Review"}
-              </button>
+            <div style={styles.trust}>
+              <span>🔒 Secure payment</span>
+              <span>📥 Instant download</span>
             </div>
-
-            {showReviewForm && (
-              <div style={styles.reviewForm}>
-                <div style={styles.starsRow}>
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span key={star} onClick={() => setReviewRating(star)} style={{ cursor: "pointer", fontSize: "24px", color: star <= reviewRating ? "#fbbf24" : "#475569" }}>★</span>
-                  ))}
-                </div>
-                <textarea value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} placeholder="Share your thoughts..." style={{ ...styles.reviewInput, minHeight: "80px", marginTop: "10px" }} />
-                <button onClick={handleSubmitReview} disabled={submittingReview} style={styles.submitReviewBtn}>
-                  {submittingReview ? "Submitting..." : "Submit Review"}
-                </button>
-              </div>
-            )}
-
-            {reviews.length > 0 ? (
-              reviews.map((r) => (
-                <div key={r.id} style={styles.reviewCard}>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ fontWeight: 600 }}>{r.displayName || r.customerEmail?.split("@")[0] || "Anonymous"}</span>
-                    <span style={{ color: "#fbbf24" }}>{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
-                  </div>
-                  <p style={{ color: "#cbd5e1", marginTop: "6px", fontSize: "14px" }}>{r.comment}</p>
-                </div>
-              ))
-            ) : (
-              <p style={{ color: "#64748b", fontSize: "14px" }}>No reviews yet. Be the first!</p>
-            )}
           </div>
+        </div>
+
+        {/* Reviews */}
+        <div style={styles.reviewsSection}>
+          <h3 style={styles.reviewsTitle}>Reviews</h3>
+          <button onClick={() => setShowReviewForm(!showReviewForm)} style={styles.reviewBtn}>
+            {showReviewForm ? "Cancel" : "Write a Review"}
+          </button>
+          {showReviewForm && (
+            <div style={styles.reviewForm}>
+              <div style={{ display: "flex", gap: "4px", marginBottom: "8px" }}>
+                {[1,2,3,4,5].map(s => (
+                  <span key={s} onClick={() => setReviewRating(s)} style={{ cursor: "pointer", fontSize: "20px", color: s <= reviewRating ? "#F7B731" : "#E5E7EB" }}>★</span>
+                ))}
+              </div>
+              <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder="Share your thoughts..." style={styles.reviewInput} />
+              <button onClick={handleSubmitReview} disabled={submittingReview} style={styles.submitBtn}>Submit</button>
+            </div>
+          )}
+          {reviews.map(r => (
+            <div key={r.id} style={styles.reviewCard}>
+              <p style={{ fontWeight: 600, margin: 0 }}>{r.displayName || r.customerEmail?.split("@")[0] || "Anonymous"}</p>
+              <p style={{ color: "#F7B731", margin: "2px 0" }}>{"★".repeat(r.rating)}</p>
+              <p style={{ color: "#6B7280", fontSize: "14px", margin: 0 }}>{r.comment}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -221,30 +154,30 @@ function ProductDetails() {
 }
 
 const styles = {
-  page: { minHeight: "calc(100vh - 70px)", padding: "40px 24px", background: "linear-gradient(180deg, #05070d 0%, #0f172a 100%)", color: "#fff", fontFamily: "Inter, sans-serif" },
-  container: { maxWidth: "900px", margin: "0 auto" },
-  backLink: { display: "inline-block", color: "#a5b4ff", textDecoration: "none", marginBottom: "24px" },
-  card: { padding: "32px", borderRadius: "24px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(79,124,255,0.16)" },
-  topRow: { display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "20px", alignItems: "flex-start" },
-  title: { fontSize: "36px", margin: 0 },
-  category: { color: "#94a3b8", marginTop: "10px" },
-  pricePanel: { fontSize: "32px", fontWeight: 700, color: "#fff" },
-  description: { color: "#cbd5e1", marginTop: "28px", lineHeight: 1.8 },
-  infoGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "18px", marginTop: "28px" },
-  infoBlock: { padding: "20px", borderRadius: "18px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.1)" },
-  infoLabel: { margin: 0, color: "#94a3b8", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.12em" },
-  infoValue: { margin: "10px 0 0", fontSize: "16px", fontWeight: 600 },
-  successBox: { padding: "32px", borderRadius: "16px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.3)", textAlign: "center" },
-  downloadBtn: { display: "inline-block", marginTop: "16px", padding: "14px 24px", borderRadius: "12px", background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", textDecoration: "none", fontWeight: 700 },
-  reviewsSection: { marginTop: "28px", borderTop: "1px solid rgba(79,124,255,0.1)", paddingTop: "24px" },
-  reviewsHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" },
-  reviewsTitle: { fontSize: "18px", margin: 0 },
-  reviewBtn: { padding: "8px 16px", borderRadius: "10px", background: "rgba(79,124,255,0.15)", color: "#a5b4ff", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "13px" },
-  reviewForm: { marginBottom: "20px", padding: "16px", borderRadius: "14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(79,124,255,0.1)" },
-  starsRow: { display: "flex", gap: "4px" },
-  reviewInput: { borderRadius: "14px", border: "1px solid rgba(148,163,184,0.2)", padding: "14px 16px", fontSize: "14px", background: "rgba(255,255,255,0.04)", color: "#fff", outline: "none", width: "100%" },
-  submitReviewBtn: { padding: "10px 20px", borderRadius: "14px", border: "none", background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff", cursor: "pointer", fontWeight: 700, marginTop: "10px" },
-  reviewCard: { padding: "14px", borderRadius: "12px", background: "rgba(255,255,255,0.03)", marginBottom: "8px" },
+  page: { fontFamily: "'Inter', sans-serif", background: "#FAFBFC", color: "#1A1D26", minHeight: "100vh", padding: "40px 24px" },
+  container: { maxWidth: "860px", margin: "0 auto" },
+  backLink: { color: "#6C5CE7", textDecoration: "none", fontSize: "14px" },
+  layout: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "40px", marginTop: "20px", alignItems: "start" },
+  imageSection: { background: "#F3F4F6", borderRadius: "16px", overflow: "hidden", minHeight: "360px", display: "flex", alignItems: "center", justifyContent: "center" },
+  productImage: { width: "100%", height: "100%", objectFit: "cover" },
+  imagePlaceholder: { fontSize: "64px", opacity: 0.2 },
+  infoSection: {},
+  category: { fontSize: "12px", color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em" },
+  title: { fontSize: "28px", fontWeight: 700, margin: "8px 0" },
+  creator: { color: "#6B7280", fontSize: "14px" },
+  rating: { color: "#F7B731", fontSize: "14px", marginTop: "4px" },
+  description: { color: "#4B5563", lineHeight: 1.7, marginTop: "16px", fontSize: "15px" },
+  price: { fontSize: "32px", fontWeight: 700, color: "#6C5CE7", marginTop: "20px" },
+  successBox: { marginTop: "16px", padding: "16px", borderRadius: "12px", background: "#ECFDF5", border: "1px solid #A7F3D0", textAlign: "center" },
+  downloadBtn: { display: "inline-block", marginTop: "10px", padding: "10px 20px", borderRadius: "10px", background: "#6C5CE7", color: "#fff", textDecoration: "none", fontWeight: 600 },
+  trust: { display: "flex", gap: "20px", marginTop: "12px", fontSize: "13px", color: "#6B7280" },
+  reviewsSection: { marginTop: "48px", borderTop: "1px solid #E5E7EB", paddingTop: "24px" },
+  reviewsTitle: { fontSize: "20px", fontWeight: 600 },
+  reviewBtn: { padding: "8px 16px", borderRadius: "8px", border: "1px solid #E5E7EB", background: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: 500, marginBottom: "16px", marginTop: "8px" },
+  reviewForm: { marginBottom: "16px", padding: "16px", borderRadius: "12px", background: "#fff", border: "1px solid #E5E7EB" },
+  reviewInput: { width: "100%", minHeight: "80px", borderRadius: "8px", border: "1px solid #E5E7EB", padding: "10px", fontSize: "14px", outline: "none", marginBottom: "8px" },
+  submitBtn: { padding: "8px 16px", borderRadius: "8px", background: "#6C5CE7", color: "#fff", border: "none", cursor: "pointer", fontWeight: 600, fontSize: "13px" },
+  reviewCard: { padding: "12px", borderRadius: "10px", background: "#fff", border: "1px solid #E5E7EB", marginBottom: "8px" },
 };
 
 export default ProductDetails;

@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { updateUserProfile, changeUserRole, deleteUserAccount } from "../services/userService";
 import { uploadProductFile } from "../services/productService";
@@ -11,65 +11,36 @@ function Settings() {
   const [displayName, setDisplayName] = useState(userProfile?.displayName || "");
   const [bio, setBio] = useState(userProfile?.bio || "");
   const [profileImage, setProfileImage] = useState(null);
+  const [paypalEmail, setPaypalEmail] = useState(userProfile?.payoutDetails?.paypalEmail || "");
+  const [cryptoWallet, setCryptoWallet] = useState(userProfile?.payoutDetails?.cryptoWallet || "");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
-    setSaving(true);
-    setError("");
-    setMessage("");
-
+    setSaving(true); setError(""); setMessage("");
     try {
       let profileImageUrl = userProfile?.profileImage || "";
-
-      if (profileImage) {
-        profileImageUrl = await uploadProductFile(currentUser.uid, profileImage);
-      }
-
-      await updateUserProfile(currentUser.uid, {
-        displayName,
-        bio,
-        profileImage: profileImageUrl,
-      });
-
+      if (profileImage) profileImageUrl = await uploadProductFile(currentUser.uid, profileImage);
+      await updateUserProfile(currentUser.uid, { displayName, bio, profileImage: profileImageUrl, payoutDetails: { paypalEmail, cryptoWallet } });
       await refreshUserProfile();
-      setMessage("Profile updated successfully!");
-    } catch (err) {
-      console.error("Failed to update profile:", err);
-      setError("Failed to update profile.");
-    } finally {
-      setSaving(false);
-    }
+      setMessage("Profile updated!");
+    } catch (err) { setError("Failed to update profile."); }
+    finally { setSaving(false); }
   };
 
   const handleRoleChange = async (newRole) => {
-    if (!window.confirm(`Switch to ${newRole}? Your dashboard will change.`)) return;
-
-    try {
-      await changeUserRole(currentUser.uid, newRole);
-      await refreshUserProfile();
-      setMessage(`Role changed to ${newRole}!`);
-      setTimeout(() => navigate("/dashboard"), 1000);
-    } catch (err) {
-      console.error("Failed to change role:", err);
-      setError("Failed to change role.");
-    }
+    if (!window.confirm(`Switch to ${newRole}?`)) return;
+    try { await changeUserRole(currentUser.uid, newRole); await refreshUserProfile(); navigate("/dashboard"); }
+    catch (err) { setError("Failed to change role."); }
   };
 
-  const handleDeleteAccount = async () => {
-    if (!window.confirm("Are you sure? This permanently deletes your account, products, and all data.")) return;
-    if (!window.confirm("Final confirmation: This cannot be undone.")) return;
-
-    try {
-      await deleteUserAccount(currentUser.uid);
-      await logout();
-      navigate("/");
-    } catch (err) {
-      console.error("Failed to delete account:", err);
-      setError("Failed to delete account. Try again or contact support.");
-    }
+  const handleDelete = async () => {
+    if (!window.confirm("Delete your account permanently?")) return;
+    if (!window.confirm("This cannot be undone. Are you sure?")) return;
+    try { await deleteUserAccount(currentUser.uid); await logout(); navigate("/"); }
+    catch (err) { setError("Failed to delete account."); }
   };
 
   return (
@@ -77,115 +48,85 @@ function Settings() {
       <div style={styles.container}>
         <h1 style={styles.title}>Settings</h1>
 
-        {message && <div style={styles.alertSuccess}>{message}</div>}
-        {error && <div style={styles.alertError}>{error}</div>}
+        {message && <div style={styles.success}>{message}</div>}
+        {error && <div style={styles.error}>{error}</div>}
 
-        {/* PROFILE SECTION */}
+        {/* Profile */}
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>Profile</h2>
           <form onSubmit={handleSaveProfile} style={styles.form}>
-            <label style={styles.label}>
-              Display Name
-              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Your name" style={styles.input} />
+            <label style={styles.label}>Display Name
+              <input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your name" style={styles.input} />
             </label>
-            <label style={styles.label}>
-              Bio
-              <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell us about yourself" style={{ ...styles.input, minHeight: "80px" }} />
+            <label style={styles.label}>Bio
+              <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="About you..." style={{ ...styles.input, minHeight: "70px" }} />
             </label>
-            <label style={styles.label}>
-              Profile Image
-              <input type="file" accept="image/*" onChange={(e) => setProfileImage(e.target.files?.[0] || null)} style={styles.input} />
+            <label style={styles.label}>Profile Image
+              <input type="file" accept="image/*" onChange={e => setProfileImage(e.target.files?.[0] || null)} style={styles.fileInput} />
             </label>
-            <button type="submit" disabled={saving} style={styles.saveBtn}>
-              {saving ? "Saving…" : "Save Profile"}
+            <button type="submit" disabled={saving} style={styles.button}>
+              {saving ? "Saving..." : "Save Profile"}
             </button>
           </form>
         </div>
 
-        {/* ACCOUNT SECTION */}
+        {/* Payout */}
         <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>Account</h2>
-          <div style={styles.infoRow}>
-            <span style={styles.infoLabel}>Email</span>
-            <span style={styles.infoValue}>{currentUser?.email || "N/A"}</span>
-          </div>
-          <div style={styles.infoRow}>
-            <span style={styles.infoLabel}>Role</span>
-            <span style={{ ...styles.infoValue, textTransform: "capitalize" }}>{userProfile?.role || "None"}</span>
-          </div>
-          <div style={styles.infoRow}>
-            <span style={styles.infoLabel}>Member since</span>
-            <span style={styles.infoValue}>
-              {userProfile?.createdAt?.toDate ? userProfile.createdAt.toDate().toLocaleDateString() : "N/A"}
-            </span>
+          <h2 style={styles.sectionTitle}>Payout Details</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <label style={styles.label}>PayPal Email
+              <input value={paypalEmail} onChange={e => setPaypalEmail(e.target.value)} placeholder="you@example.com" style={styles.input} />
+            </label>
+            <label style={styles.label}>Crypto Wallet
+              <input value={cryptoWallet} onChange={e => setCryptoWallet(e.target.value)} placeholder="BTC/ETH/USDT address" style={styles.input} />
+            </label>
+            <button onClick={handleSaveProfile} style={styles.button}>Save Payout Info</button>
           </div>
         </div>
-        {/* PAYOUT SECTION */}
-<div style={styles.section}>
-  <h2 style={styles.sectionTitle}>Payout Details</h2>
-  <p style={styles.sectionDesc}>Where we'll send your earnings.</p>
-  <div style={styles.infoRow}>
-    <span style={styles.infoLabel}>PayPal</span>
-    <span style={styles.infoValue}>{userProfile?.payoutDetails?.paypalEmail || "Not set"}</span>
-  </div>
-  <div style={styles.infoRow}>
-    <span style={styles.infoLabel}>Crypto Wallet</span>
-    <span style={styles.infoValue}>{userProfile?.payoutDetails?.cryptoWallet || "Not set"}</span>
-  </div>
-  <button onClick={() => navigate("/choose-role")} style={{ ...styles.saveBtn, marginTop: "12px" }}>
-    Update Payout Details
-  </button>
-</div>
 
-        {/* ROLE SECTION */}
+        {/* Role */}
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>Switch Role</h2>
-          <p style={styles.sectionDesc}>Change how you use Syndra. Your dashboard will update.</p>
-          <div style={styles.roleButtons}>
-            <button onClick={() => handleRoleChange("creator")} style={userProfile?.role === "creator" ? styles.roleBtnActive : styles.roleBtn}>
-              🎨 Creator
-            </button>
-            <button onClick={() => handleRoleChange("promoter")} style={userProfile?.role === "promoter" ? styles.roleBtnActive : styles.roleBtn}>
-              📣 Promoter
-            </button>
-            <button onClick={() => handleRoleChange("buyer")} style={userProfile?.role === "buyer" ? styles.roleBtnActive : styles.roleBtn}>
-              🛍️ Buyer
-            </button>
+          <p style={{ color: "#6B7280", fontSize: "13px", marginBottom: "12px" }}>Current: <strong style={{ textTransform: "capitalize" }}>{userProfile?.role || "None"}</strong></p>
+          <div style={{ display: "flex", gap: "8px" }}>
+            {["creator", "promoter", "buyer"].map(r => (
+              <button key={r} onClick={() => handleRoleChange(r)} style={userProfile?.role === r ? styles.roleActive : styles.roleBtn}>
+                {r}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* DANGER ZONE */}
-        <div style={{ ...styles.section, ...styles.dangerSection }}>
+        {/* Danger */}
+        <div style={{ ...styles.section, borderColor: "#FECACA" }}>
           <h2 style={styles.sectionTitle}>Danger Zone</h2>
-          <p style={styles.sectionDesc}>Permanently delete your account and all associated data.</p>
-          <button onClick={handleDeleteAccount} style={styles.deleteBtn}>Delete Account</button>
+          <p style={{ color: "#6B7280", fontSize: "13px", marginBottom: "12px" }}>Permanently delete your account and all data.</p>
+          <button onClick={handleDelete} style={styles.deleteBtn}>Delete Account</button>
         </div>
+
+        <Link to="/dashboard" style={styles.backLink}>← Back to Dashboard</Link>
       </div>
     </div>
   );
 }
 
 const styles = {
-  page: { minHeight: "calc(100vh - 70px)", padding: "40px 24px", color: "#fff", background: "linear-gradient(180deg, #05070d 0%, #0f172a 100%)", fontFamily: "Inter, sans-serif" },
-  container: { maxWidth: "640px", margin: "0 auto" },
-  title: { fontSize: "34px", margin: "0 0 28px" },
-  section: { padding: "24px", borderRadius: "18px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.12)", marginBottom: "20px" },
-  sectionTitle: { fontSize: "20px", margin: "0 0 12px" },
-  sectionDesc: { color: "#94a3b8", fontSize: "14px", marginBottom: "16px" },
-  form: { display: "flex", flexDirection: "column", gap: "14px" },
-  label: { display: "flex", flexDirection: "column", gap: "6px", fontSize: "14px", color: "#cbd5e1" },
-  input: { borderRadius: "12px", border: "1px solid rgba(148,163,184,0.2)", padding: "12px 14px", fontSize: "14px", background: "rgba(255,255,255,0.04)", color: "#fff", outline: "none" },
-  saveBtn: { padding: "12px 20px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff", cursor: "pointer", fontWeight: 700 },
-  infoRow: { display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" },
-  infoLabel: { color: "#94a3b8", fontSize: "14px" },
-  infoValue: { fontSize: "14px" },
-  roleButtons: { display: "flex", gap: "10px", flexWrap: "wrap" },
-  roleBtn: { flex: 1, minWidth: "100px", padding: "12px 16px", borderRadius: "12px", border: "1px solid rgba(79,124,255,0.2)", background: "transparent", color: "#94a3b8", cursor: "pointer", fontWeight: 600 },
-  roleBtnActive: { flex: 1, minWidth: "100px", padding: "12px 16px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff", cursor: "pointer", fontWeight: 700 },
-  dangerSection: { border: "1px solid rgba(239,68,68,0.3)" },
-  deleteBtn: { padding: "12px 20px", borderRadius: "12px", border: "1px solid rgba(239,68,68,0.5)", background: "rgba(239,68,68,0.1)", color: "#fca5a5", cursor: "pointer", fontWeight: 600 },
-  alertError: { padding: "12px 16px", borderRadius: "12px", background: "rgba(248,113,113,0.16)", color: "#fecaca", marginBottom: "16px" },
-  alertSuccess: { padding: "12px 16px", borderRadius: "12px", background: "rgba(34,197,94,0.16)", color: "#bbf7d0", marginBottom: "16px" },
+  page: { fontFamily: "'Inter', sans-serif", background: "linear-gradient(180deg, #F8F9FC 0%, #EEF0F5 100%)", minHeight: "100vh", padding: "40px 24px" },
+  container: { maxWidth: "540px", margin: "0 auto" },
+  title: { fontSize: "28px", fontWeight: 700, color: "#1A1D26", margin: "0 0 24px" },
+  success: { padding: "12px", borderRadius: "10px", background: "#ECFDF5", color: "#10B981", fontSize: "13px", marginBottom: "16px" },
+  error: { padding: "12px", borderRadius: "10px", background: "#FEF2F2", color: "#EF4444", fontSize: "13px", marginBottom: "16px" },
+  section: { background: "#fff", border: "1px solid #E8EAEF", borderRadius: "14px", padding: "20px", marginBottom: "16px" },
+  sectionTitle: { fontSize: "16px", fontWeight: 600, margin: "0 0 12px", color: "#1A1D26" },
+  form: { display: "flex", flexDirection: "column", gap: "12px" },
+  label: { display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", color: "#4B5563", fontWeight: 500 },
+  input: { padding: "10px 14px", borderRadius: "10px", border: "1px solid #E0E3E8", fontSize: "14px", outline: "none", background: "#F8F9FC" },
+  fileInput: { fontSize: "13px", color: "#6B7280" },
+  button: { padding: "10px 16px", borderRadius: "10px", border: "none", background: "#6C5CE7", color: "#fff", fontWeight: 600, fontSize: "13px", cursor: "pointer" },
+  roleBtn: { padding: "8px 16px", borderRadius: "10px", border: "1px solid #E0E3E8", background: "#fff", color: "#4B5563", fontWeight: 500, cursor: "pointer", fontSize: "13px", textTransform: "capitalize" },
+  roleActive: { padding: "8px 16px", borderRadius: "10px", border: "none", background: "#6C5CE7", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: "13px", textTransform: "capitalize" },
+  deleteBtn: { padding: "10px 16px", borderRadius: "10px", border: "1px solid #FECACA", background: "#FEF2F2", color: "#EF4444", fontWeight: 600, fontSize: "13px", cursor: "pointer" },
+  backLink: { display: "block", textAlign: "center", marginTop: "20px", color: "#6C5CE7", textDecoration: "none", fontSize: "13px", fontWeight: 500 },
 };
 
 export default Settings;

@@ -3,15 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { uploadProductFile, createProduct } from "../services/productService";
 
-const categories = [
-  "Worksheets",
-  "Study Guides",
-  "E-books",
-  "Digital Art",
-  "Templates",
-  "Printables",
-  "Other",
-];
+const categories = ["Worksheets", "Study Guides", "E-books", "Digital Art", "Templates", "Printables", "Other"];
 
 function ProductUpload() {
   const { currentUser, userProfile } = useContext(AuthContext);
@@ -19,252 +11,98 @@ function ProductUpload() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState(categories[0]);
-  const [price, setPrice] = useState(0);
+  const [price, setPrice] = useState("");
   const [file, setFile] = useState(null);
   const [thumbnail, setThumbnail] = useState(null);
-  const [previews, setPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   if (userProfile?.creatorStatus && userProfile.creatorStatus !== "approved") {
     return (
       <div style={styles.page}>
-        <div style={styles.container}>
-          <h1 style={styles.title}>Access Restricted</h1>
-          <p style={styles.subtitle}>Your creator account is pending approval. You'll be able to upload once approved.</p>
-          <Link to="/dashboard" style={{ color: "#a5b4ff", textDecoration: "none" }}>← Back to Dashboard</Link>
+        <div style={styles.card}>
+          <h2 style={styles.title}>Access Restricted</h2>
+          <p style={styles.subtitle}>Your creator account is pending approval.</p>
+          <Link to="/dashboard" style={styles.link}>← Back to Dashboard</Link>
         </div>
       </div>
     );
   }
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (!currentUser) return;
-    if (!title || !description || !file) {
-      setError("Please complete all fields and attach a product file.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!title || !description || !file || !price) { setError("Please fill in all required fields."); return; }
+    setLoading(true); setError(""); setSuccess("");
     try {
       const fileUrl = await uploadProductFile(currentUser.uid, file);
-
       let thumbnailUrl = "";
-      if (thumbnail) {
-        thumbnailUrl = await uploadProductFile(currentUser.uid, thumbnail);
-      }
-
-      let previewUrls = [];
-      if (previews.length > 0) {
-        const uploadPromises = previews.map((preview) =>
-          uploadProductFile(currentUser.uid, preview)
-        );
-        previewUrls = await Promise.all(uploadPromises);
-      }
-
-      await createProduct({
-        title,
-        description,
-        category,
-        price,
-        ownerUid: currentUser.uid,
-        creatorEmail: currentUser.email,
-        fileUrl,
-        thumbnailUrl,
-        previewUrls,
-      });
-
-      setSuccess("Product uploaded and submitted for review.");
-      setTitle("");
-      setDescription("");
-      setCategory(categories[0]);
-      setPrice(0);
-      setFile(null);
-      setThumbnail(null);
-      setPreviews([]);
-      setDropdownOpen(false);
-      setTimeout(() => navigate("/dashboard"), 1400);
-    } catch (uploadError) {
-      console.error("Product upload failed", uploadError);
-      setError("Unable to upload product. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+      if (thumbnail) thumbnailUrl = await uploadProductFile(currentUser.uid, thumbnail);
+      await createProduct({ title, description, category, price: Number(price), ownerUid: currentUser.uid, creatorEmail: currentUser.email, fileUrl, thumbnailUrl });
+      setSuccess("Product submitted for review!");
+      setTitle(""); setDescription(""); setCategory(categories[0]); setPrice(""); setFile(null); setThumbnail(null);
+      setTimeout(() => navigate("/dashboard"), 1500);
+    } catch (err) { setError("Upload failed. Please try again."); }
+    finally { setLoading(false); }
   };
 
   return (
     <div style={styles.page}>
-      <div style={styles.container}>
-        <div style={styles.header}>
-          <div>
-            <h1 style={styles.title}>Upload a Product</h1>
-            <p style={styles.subtitle}>
-              Creators can submit digital products for review and marketplace listing.
-            </p>
-          </div>
-        </div>
+      <div style={styles.card}>
+        <h2 style={styles.title}>Upload a Product</h2>
+        <p style={styles.subtitle}>Submit your digital product for review</p>
+
+        {error && <div style={styles.errorBox}>{error}</div>}
+        {success && <div style={styles.successBox}>{success}</div>}
 
         <form onSubmit={handleSubmit} style={styles.form}>
-          {error && <div style={styles.alertError}>{error}</div>}
-          {success && <div style={styles.alertSuccess}>{success}</div>}
-
-          <label style={styles.label}>
-            Product Title
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter a descriptive title"
-              style={styles.input}
-              required
-            />
+          <label style={styles.label}>Title *
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Algebra Worksheet Pack" style={styles.input} required />
           </label>
-
-          <label style={styles.label}>
-            Description
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Write a clear description of the product"
-              style={{ ...styles.input, minHeight: "140px" }}
-              required
-            />
+          <label style={styles.label}>Description *
+            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Describe your product..." style={{ ...styles.input, minHeight: "100px" }} required />
           </label>
-
           <div style={styles.row}>
-            <label style={{ ...styles.label, flex: 1, position: "relative" }}>
-              Category
-              <div style={styles.customSelect} onClick={() => setDropdownOpen(!dropdownOpen)}>
-                <span>{category}</span>
-                <span style={styles.selectArrow}>▾</span>
-              </div>
-              {dropdownOpen && (
-                <div style={styles.dropdownList}>
-                  {categories.map((option) => (
-                    <div
-                      key={option}
-                      style={{
-                        ...styles.dropdownOption,
-                        ...(category === option ? styles.dropdownOptionActive : {}),
-                      }}
-                      onClick={() => {
-                        setCategory(option);
-                        setDropdownOpen(false);
-                      }}
-                    >
-                      {option}
-                    </div>
-                  ))}
-                </div>
-              )}
+            <label style={{ ...styles.label, flex: 1 }}>Category
+              <select value={category} onChange={e => setCategory(e.target.value)} style={styles.input}>
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
             </label>
-
-            <label style={{ ...styles.label, flex: 1 }}>
-              Price ($)
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                style={styles.input}
-                required
-              />
+            <label style={{ ...styles.label, flex: 1 }}>Price ($) *
+              <input type="number" min="0" step="0.01" value={price} onChange={e => setPrice(e.target.value)} placeholder="9.99" style={styles.input} required />
             </label>
           </div>
-
-          <label style={styles.label}>
-            Thumbnail Image
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setThumbnail(e.target.files?.[0] || null)}
-              style={styles.fileInput}
-            />
+          <label style={styles.label}>Product File *
+            <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} style={styles.fileInput} required />
           </label>
-
-          <label style={styles.label}>
-            Preview Images (optional)
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => setPreviews(Array.from(e.target.files || []))}
-              style={styles.fileInput}
-            />
+          <label style={styles.label}>Thumbnail Image
+            <input type="file" accept="image/*" onChange={e => setThumbnail(e.target.files?.[0] || null)} style={styles.fileInput} />
           </label>
-
-          <label style={styles.label}>
-            Product File *
-            <input
-              type="file"
-              accept=".pdf,.zip,.jpg,.jpeg,.png,.gif,.webp,.svg,.eps,.ai,.psd,.mp4,.mov,.avi,.webm,.mp3,.wav,.epub,.mobi,.csv,.xlsx,.pptx,.docx,.txt,.rtf"
-              onChange={(e) => {
-                const selectedFile = e.target.files?.[0] || null;
-                if (selectedFile) {
-                  const blockedExtensions = [
-                    ".exe", ".bat", ".cmd", ".com", ".msi", ".scr",
-                    ".vbs", ".js", ".jar", ".apk", ".dmg", ".pif",
-                    ".reg", ".sh", ".py", ".php", ".html", ".htm"
-                  ];
-                  const fileName = selectedFile.name.toLowerCase();
-                  const isBlocked = blockedExtensions.some((ext) => fileName.endsWith(ext));
-                  if (isBlocked) {
-                    setError("This file type is not allowed for security reasons. Please upload a safe file format.");
-                    e.target.value = "";
-                    return;
-                  }
-                  if (selectedFile.size > 100 * 1024 * 1024) {
-                    setError("File size must be under 100MB.");
-                    e.target.value = "";
-                    return;
-                  }
-                  setError("");
-                }
-                setFile(selectedFile);
-              }}
-              style={styles.fileInput}
-              required
-            />
-            <span style={styles.hint}>
-              Allowed: PDF, ZIP, images, videos, EPUB, documents (max 100MB). No executable files.
-            </span>
-          </label>
-
           <button type="submit" disabled={loading} style={styles.button}>
-            {loading ? "Uploading…" : "Submit for Review"}
+            {loading ? "Uploading..." : "Submit for Review"}
           </button>
         </form>
+
+        <Link to="/dashboard" style={{ ...styles.link, display: "block", textAlign: "center", marginTop: "16px" }}>← Back to Dashboard</Link>
       </div>
     </div>
   );
 }
 
 const styles = {
-  page: { minHeight: "calc(100vh - 70px)", padding: "40px 24px", color: "#fff", background: "linear-gradient(180deg, #05070d 0%, #0f172a 100%)", fontFamily: "Inter, sans-serif" },
-  container: { maxWidth: "760px", margin: "0 auto", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.18)", borderRadius: "24px", padding: "32px", boxShadow: "0 30px 80px rgba(0,0,0,0.25)" },
-  header: { marginBottom: "24px" },
-  title: { margin: 0, fontSize: "32px" },
-  subtitle: { color: "#94a3b8", marginTop: "12px", lineHeight: 1.7 },
-  form: { display: "flex", flexDirection: "column", gap: "18px" },
-  label: { display: "flex", flexDirection: "column", gap: "10px", fontSize: "14px", color: "#cbd5e1" },
-  input: { borderRadius: "14px", border: "1px solid rgba(148,163,184,0.2)", padding: "14px 16px", fontSize: "14px", background: "rgba(255,255,255,0.04)", color: "#fff", outline: "none" },
-  customSelect: { borderRadius: "14px", border: "1px solid rgba(148,163,184,0.2)", padding: "14px 16px", fontSize: "14px", background: "rgba(255,255,255,0.04)", color: "#fff", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", userSelect: "none" },
-  selectArrow: { color: "#94a3b8", fontSize: "12px" },
-  dropdownList: { position: "absolute", top: "100%", left: 0, right: 0, marginTop: "4px", borderRadius: "14px", border: "1px solid rgba(79,124,255,0.2)", background: "#0f172a", overflow: "hidden", zIndex: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.5)" },
-  dropdownOption: { padding: "12px 16px", fontSize: "14px", color: "#cbd5e1", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.04)" },
-  dropdownOptionActive: { background: "rgba(79,124,255,0.15)", color: "#a5b4ff" },
-  fileInput: { borderRadius: "14px", border: "1px dashed rgba(148,163,184,0.3)", padding: "14px 16px", fontSize: "14px", background: "rgba(255,255,255,0.02)", color: "#94a3b8", outline: "none", cursor: "pointer" },
-  row: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "18px" },
-  button: { padding: "16px 24px", borderRadius: "16px", border: "none", cursor: "pointer", fontSize: "16px", fontWeight: 700, background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff", marginTop: "8px" },
-  hint: { fontSize: "12px", color: "#64748b", marginTop: "4px" },
-  alertError: { padding: "14px 18px", borderRadius: "16px", background: "rgba(248,113,113,0.16)", color: "#fecaca" },
-  alertSuccess: { padding: "14px 18px", borderRadius: "16px", background: "rgba(34,197,94,0.16)", color: "#bbf7d0" },
+  page: { display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "linear-gradient(180deg, #F8F9FC 0%, #EEF0F5 100%)", fontFamily: "'Inter', sans-serif", padding: "40px 24px" },
+  card: { background: "#fff", border: "1px solid #E8EAEF", borderRadius: "20px", padding: "36px 28px", maxWidth: "580px", width: "100%", boxShadow: "0 4px 24px rgba(0,0,0,0.04)" },
+  title: { fontSize: "24px", fontWeight: 700, margin: 0, color: "#1A1D26" },
+  subtitle: { color: "#6B7280", marginTop: "4px", fontSize: "14px", marginBottom: "20px" },
+  errorBox: { padding: "12px", borderRadius: "10px", background: "#FEF2F2", color: "#EF4444", fontSize: "13px", marginBottom: "16px" },
+  successBox: { padding: "12px", borderRadius: "10px", background: "#ECFDF5", color: "#10B981", fontSize: "13px", marginBottom: "16px" },
+  form: { display: "flex", flexDirection: "column", gap: "14px" },
+  label: { display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", color: "#4B5563", fontWeight: 500 },
+  input: { padding: "12px 14px", borderRadius: "10px", border: "1px solid #E0E3E8", fontSize: "14px", outline: "none", background: "#F8F9FC" },
+  row: { display: "flex", gap: "12px" },
+  fileInput: { padding: "10px", fontSize: "13px", color: "#6B7280" },
+  button: { padding: "12px", borderRadius: "10px", border: "none", background: "#6C5CE7", color: "#fff", fontWeight: 600, fontSize: "15px", cursor: "pointer", marginTop: "4px" },
+  link: { color: "#6C5CE7", textDecoration: "none", fontSize: "13px", fontWeight: 500 },
 };
 
 export default ProductUpload;

@@ -13,21 +13,11 @@ function Signup() {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError("Please fill in all fields.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
+    if (!email || !password) { setError("Please fill in both fields."); return; }
+    if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+    setLoading(true); setError("");
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      // Create user document
       await setDoc(doc(db, "users", result.user.uid), {
         email,
         role: null,
@@ -38,61 +28,53 @@ function Signup() {
       });
       navigate("/choose-role");
     } catch (err) {
-      if (err.code === "auth/email-already-in-use") {
-        setError("An account with this email already exists.");
-      } else {
-        setError("Signup failed. Please try again.");
-      }
-    } finally {
-      setLoading(false);
-    }
+      if (err.code === "auth/email-already-in-use") setError("An account with this email already exists.");
+      else setError("Signup failed. Please try again.");
+    } finally { setLoading(false); }
   };
 
   return (
     <div style={styles.page}>
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <h1 style={styles.title}>Create Account</h1>
-          <p style={styles.subtitle}>Join Syndra today</p>
+      <div style={styles.card}>
+        <div style={styles.logo}>✦ Syndra</div>
+        <h1 style={styles.title}>Create your account</h1>
+        <p style={styles.subtitle}>Join the marketplace for digital creators</p>
 
-          {error && <div style={styles.alertError}>{error}</div>}
+        {error && <div style={styles.error}>{error}</div>}
 
-          <form onSubmit={handleSignup} style={styles.form}>
-            <label style={styles.label}>
-              Email
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" style={styles.input} required />
-            </label>
-            <label style={styles.label}>
-              Password
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" style={styles.input} required />
-            </label>
-            <button type="submit" disabled={loading} style={styles.button}>
-              {loading ? "Creating Account…" : "Sign Up"}
-            </button>
-          </form>
+        <form onSubmit={handleSignup} style={styles.form}>
+          <label style={styles.label}>Email
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" style={styles.input} required />
+          </label>
+          <label style={styles.label}>Password
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="At least 6 characters" style={styles.input} required />
+          </label>
+          <button type="submit" disabled={loading} style={styles.button}>
+            {loading ? "Creating account..." : "Sign Up"}
+          </button>
+        </form>
 
-          <p style={styles.loginText}>
-            Already have an account? <Link to="/login" style={styles.loginLink}>Sign In</Link>
-          </p>
-        </div>
+        <p style={styles.footerText}>
+          Already have an account? <Link to="/login" style={styles.link}>Sign in</Link>
+        </p>
       </div>
     </div>
   );
 }
 
 const styles = {
-  page: { minHeight: "calc(100vh - 70px)", padding: "60px 24px", color: "#fff", background: "linear-gradient(180deg, #05070d 0%, #0f172a 100%)", fontFamily: "Inter, sans-serif", display: "flex", justifyContent: "center", alignItems: "center" },
-  container: { maxWidth: "440px", width: "100%" },
-  card: { padding: "40px 32px", borderRadius: "24px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(79,124,255,0.16)" },
-  title: { fontSize: "28px", margin: 0, textAlign: "center" },
-  subtitle: { color: "#94a3b8", textAlign: "center", marginTop: "8px" },
-  form: { display: "flex", flexDirection: "column", gap: "16px", marginTop: "24px" },
-  label: { display: "flex", flexDirection: "column", gap: "8px", fontSize: "14px", color: "#cbd5e1" },
-  input: { borderRadius: "14px", border: "1px solid rgba(148,163,184,0.2)", padding: "14px 16px", fontSize: "14px", background: "rgba(255,255,255,0.04)", color: "#fff", outline: "none" },
-  button: { padding: "16px 24px", borderRadius: "16px", border: "none", cursor: "pointer", fontSize: "16px", fontWeight: 700, background: "linear-gradient(135deg, #4f7cff, #7c3aed)", color: "#fff" },
-  loginText: { marginTop: "20px", textAlign: "center", color: "#94a3b8", fontSize: "14px" },
-  loginLink: { color: "#a5b4ff", textDecoration: "none" },
-  alertError: { padding: "14px 18px", borderRadius: "16px", background: "rgba(248,113,113,0.16)", color: "#fecaca", marginBottom: "8px" },
+  page: { display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#FAFBFC", fontFamily: "'Inter', sans-serif", padding: "24px" },
+  card: { background: "#fff", border: "1px solid #E5E7EB", borderRadius: "20px", padding: "40px 32px", maxWidth: "400px", width: "100%", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" },
+  logo: { textAlign: "center", fontSize: "18px", fontWeight: 700, color: "#6C5CE7", marginBottom: "20px" },
+  title: { fontSize: "24px", fontWeight: 700, margin: 0, textAlign: "center" },
+  subtitle: { color: "#6B7280", textAlign: "center", marginTop: "6px", fontSize: "14px" },
+  error: { padding: "12px", borderRadius: "10px", background: "#FEF2F2", color: "#EF4444", fontSize: "13px", marginBottom: "16px", marginTop: "16px" },
+  form: { display: "flex", flexDirection: "column", gap: "14px", marginTop: "20px" },
+  label: { display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", color: "#4B5563", fontWeight: 500 },
+  input: { padding: "12px 14px", borderRadius: "10px", border: "1px solid #E5E7EB", fontSize: "14px", outline: "none", background: "#FAFBFC" },
+  button: { padding: "12px", borderRadius: "10px", border: "none", background: "#6C5CE7", color: "#fff", fontWeight: 600, fontSize: "15px", cursor: "pointer", marginTop: "4px" },
+  link: { color: "#6C5CE7", textDecoration: "none", fontSize: "13px", fontWeight: 500 },
+  footerText: { textAlign: "center", marginTop: "16px", color: "#6B7280", fontSize: "13px" },
 };
 
 export default Signup;
