@@ -6,92 +6,132 @@ import { applyAsPromoter } from "../services/promotionService";
 function ApplyPromoter() {
   const { currentUser } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    slug: "", instagramHandle: "", instagramFollowers: "",
-    tiktokHandle: "", tiktokFollowers: "", experience: "",
-  });
+  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [form, setForm] = useState({
+    username: "",
+    instagram: "",
+    instagramFollowers: "",
+    tiktok: "",
+    tiktokFollowers: "",
+    experience: "",
+  });
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+  const isValid = form.username && form.experience.length >= 20;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.slug.trim()) { setError("Please choose a username."); return; }
-    setLoading(true); setError(""); setSuccess("");
+  const handleSubmit = async () => {
+    if (!isValid || !currentUser) return;
+    setLoading(true); setError("");
     try {
       await applyAsPromoter(currentUser.uid, currentUser.email, {
-        slug: form.slug,
+        slug: form.username,
         socialStats: {
-          instagram: { handle: form.instagramHandle, followers: Number(form.instagramFollowers) || 0 },
-          tiktok: { handle: form.tiktokHandle, followers: Number(form.tiktokFollowers) || 0 },
+          instagram: { handle: form.instagram, followers: Number(form.instagramFollowers) || 0 },
+          tiktok: { handle: form.tiktok, followers: Number(form.tiktokFollowers) || 0 },
         },
         experience: form.experience,
       });
-      setSuccess("Application submitted! We'll review it shortly.");
-      setTimeout(() => navigate("/dashboard"), 2000);
+      setSubmitted(true);
     } catch (err) { setError(err.message || "Failed to submit."); }
     finally { setLoading(false); }
   };
 
+  if (submitted) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.successCard}>
+          <span style={{ fontSize: "48px", display: "block", marginBottom: "16px" }}>🎉</span>
+          <h1 style={styles.successTitle}>Application received!</h1>
+          <p style={styles.successText}>We review applications within 24 hours. Check your dashboard for updates.</p>
+          <button onClick={() => navigate("/dashboard")} style={styles.btn}>Go to Dashboard</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.page}>
-      <div style={styles.card}>
-        <Link to="/dashboard" style={styles.back}>← Dashboard</Link>
-        <h1 style={styles.title}>Become a Promoter</h1>
-        <p style={styles.subtitle}>Share products you love and earn commission on every sale.</p>
+      <header style={styles.topbar}>
+        <div style={styles.topbarInner}>
+          <button onClick={() => navigate("/pro-promoter")} style={styles.topbarBack}>← Pro Promoter</button>
+          <span style={{ color: "rgba(0,0,0,0.1)" }}>|</span>
+          <span style={{ fontWeight: 600, fontSize: "14px", fontFamily: "'DM Sans', sans-serif" }}>Apply</span>
+        </div>
+      </header>
 
-        {error && <div style={styles.error}>{error}</div>}
-        {success && <div style={styles.success}>{success}</div>}
+      <div style={styles.container}>
+        <div style={styles.card}>
+          <div style={{ marginBottom: "32px" }}>
+            <span style={styles.badge}>✦ Pro Promoter Application</span>
+            <h1 style={styles.title}>Become a Pro Promoter</h1>
+            <p style={styles.subtitle}>Tell us about yourself and your audience. Most applications are reviewed within 24 hours.</p>
+          </div>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <label style={styles.label}>Choose your username *
-            <input name="slug" value={form.slug} onChange={handleChange} placeholder="e.g. sarah99" style={styles.input} required />
-            <span style={styles.hint}>This appears in your referral link: syndrahub.com/?ref=yourname</span>
-          </label>
-          <div style={styles.row}>
-            <label style={styles.label}>Instagram Handle
-              <input name="instagramHandle" value={form.instagramHandle} onChange={handleChange} placeholder="@handle" style={styles.input} />
-            </label>
-            <label style={styles.label}>Followers
-              <input name="instagramFollowers" type="number" value={form.instagramFollowers} onChange={handleChange} placeholder="0" style={styles.input} />
-            </label>
+          {error && <div style={styles.error}>{error}</div>}
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div>
+              <label style={styles.label}>Syndra username</label>
+              <input type="text" value={form.username} onChange={e => set("username", e.target.value)} placeholder="@yourhandle" style={styles.input} />
+            </div>
+
+            <div>
+              <label style={styles.label}>Instagram handle</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <input type="text" value={form.instagram} onChange={e => set("instagram", e.target.value)} placeholder="@instagram" style={styles.input} />
+                <input type="number" value={form.instagramFollowers} onChange={e => set("instagramFollowers", e.target.value)} placeholder="Followers" style={styles.input} />
+              </div>
+            </div>
+
+            <div>
+              <label style={styles.label}>TikTok handle</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <input type="text" value={form.tiktok} onChange={e => set("tiktok", e.target.value)} placeholder="@tiktok" style={styles.input} />
+                <input type="number" value={form.tiktokFollowers} onChange={e => set("tiktokFollowers", e.target.value)} placeholder="Followers" style={styles.input} />
+              </div>
+              <p style={{ fontSize: "12px", color: "#7a7a8a", marginTop: "4px" }}>Leave blank if you don't use that platform.</p>
+            </div>
+
+            <div>
+              <label style={styles.label}>Your experience & audience</label>
+              <textarea value={form.experience} onChange={e => set("experience", e.target.value)} rows={5} placeholder="Tell us about your audience, content, and why you want to join..." style={{ ...styles.input, resize: "none" }} />
+              <p style={{ fontSize: "12px", color: "#7a7a8a", marginTop: "4px" }}>{form.experience.length} characters (min. 20)</p>
+            </div>
+
+            <div>
+              <button onClick={handleSubmit} disabled={!isValid || loading} style={{ ...styles.btn, opacity: !isValid || loading ? 0.4 : 1, cursor: !isValid || loading ? "not-allowed" : "pointer" }}>
+                {loading ? "Submitting..." : "Submit Application"}
+              </button>
+              <p style={{ textAlign: "center", fontSize: "12px", color: "#7a7a8a", marginTop: "12px" }}>
+                By applying you agree to the <Link to="/legal" style={{ color: "#6C5CE7" }}>Promoter Terms</Link>.
+              </p>
+            </div>
           </div>
-          <div style={styles.row}>
-            <label style={styles.label}>TikTok Handle
-              <input name="tiktokHandle" value={form.tiktokHandle} onChange={handleChange} placeholder="@handle" style={styles.input} />
-            </label>
-            <label style={styles.label}>Followers
-              <input name="tiktokFollowers" type="number" value={form.tiktokFollowers} onChange={handleChange} placeholder="0" style={styles.input} />
-            </label>
-          </div>
-          <label style={styles.label}>Previous Experience
-            <textarea name="experience" value={form.experience} onChange={handleChange} placeholder="Tell us about any promoting experience..." style={{ ...styles.input, minHeight: "80px" }} />
-          </label>
-          <button type="submit" disabled={loading} style={styles.btn}>
-            {loading ? "Submitting..." : "Submit Application"}
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   );
 }
 
 const styles = {
-  page: { fontFamily: "'Inter', sans-serif", background: "linear-gradient(180deg, #F8F9FC 0%, #EEF0F5 100%)", minHeight: "100vh", padding: "40px 24px", display: "flex", justifyContent: "center" },
-  card: { background: "#fff", border: "1px solid #E8EAEF", borderRadius: "20px", padding: "36px 28px", maxWidth: "540px", width: "100%", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" },
-  back: { color: "#6C5CE7", textDecoration: "none", fontSize: "13px", fontWeight: 500 },
-  title: { fontSize: "26px", fontWeight: 700, color: "#1A1D26", marginTop: "14px", marginBottom: "4px" },
-  subtitle: { color: "#6B7280", fontSize: "14px", marginBottom: "20px" },
-  error: { padding: "10px 14px", borderRadius: "10px", background: "#FEF2F2", color: "#EF4444", fontSize: "13px", marginBottom: "14px" },
-  success: { padding: "10px 14px", borderRadius: "10px", background: "#ECFDF5", color: "#10B981", fontSize: "13px", marginBottom: "14px" },
-  form: { display: "flex", flexDirection: "column", gap: "14px" },
-  label: { display: "flex", flexDirection: "column", gap: "4px", fontSize: "13px", color: "#4B5563", fontWeight: 500 },
-  input: { padding: "10px 14px", borderRadius: "10px", border: "1px solid #E0E3E8", fontSize: "14px", outline: "none", background: "#F8F9FC" },
-  hint: { color: "#9CA3AF", fontSize: "11px", marginTop: "2px" },
-  row: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" },
-  btn: { padding: "12px", borderRadius: "10px", border: "none", background: "#6C5CE7", color: "#fff", fontWeight: 600, fontSize: "14px", cursor: "pointer", marginTop: "4px" },
+  page: { fontFamily: "'Inter', sans-serif", background: "rgba(245,245,247,0.5)", minHeight: "100vh" },
+  successCard: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", textAlign: "center", padding: "24px", background: "#fff" },
+  successTitle: { fontFamily: "'DM Sans', sans-serif", fontSize: "24px", fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 12px" },
+  successText: { fontSize: "14px", color: "#7a7a8a", maxWidth: "320px", lineHeight: 1.6, margin: "0 0 32px" },
+  btn: { padding: "14px 24px", borderRadius: "8px", border: "none", background: "#6C5CE7", color: "#fff", fontWeight: 600, fontSize: "14px", cursor: "pointer", width: "100%" },
+  topbar: { position: "sticky", top: 0, zIndex: 50, background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.08)" },
+  topbarInner: { maxWidth: "672px", margin: "0 auto", padding: "0 24px", height: "56px", display: "flex", alignItems: "center", gap: "16px" },
+  topbarBack: { display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", color: "#7a7a8a", background: "none", border: "none", cursor: "pointer" },
+  container: { maxWidth: "672px", margin: "0 auto", padding: "40px 24px" },
+  card: { background: "#fff", border: "1px solid rgba(0,0,0,0.08)", borderRadius: "12px", padding: "32px" },
+  badge: { display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: 600, padding: "4px 12px", background: "#ede9ff", color: "#6C5CE7", borderRadius: "999px", marginBottom: "16px" },
+  title: { fontFamily: "'DM Sans', sans-serif", fontSize: "24px", fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 4px" },
+  subtitle: { fontSize: "14px", color: "#7a7a8a", margin: 0 },
+  error: { padding: "10px 14px", borderRadius: "10px", background: "#FEF2F2", color: "#EF4444", fontSize: "13px", marginBottom: "16px" },
+  label: { display: "block", fontSize: "14px", fontWeight: 500, marginBottom: "6px", color: "#0f0f0f" },
+  input: { width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid rgba(0,0,0,0.08)", fontSize: "14px", outline: "none", boxSizing: "border-box", background: "#fff", color: "#0f0f0f", fontFamily: "'Inter', sans-serif" },
 };
 
 export default ApplyPromoter;

@@ -1,101 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html,
-body,
-#root {
-  width: 100%;
-  min-width: 100%;
-  height: 100%;
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-html,
 body {
-  background: #05070d;
-  color: #fff;
+  font-family: 'Inter', sans-serif;
+  background: #0A0E17;
+  color: #F8FAFB;
+  -webkit-font-smoothing: antialiased;
 }
 
-#root {
-  display: flex;
-  flex-direction: column;
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0A0E17; }
+::-webkit-scrollbar-thumb { background: #2D3548; border-radius: 3px; }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(79, 124, 255, 0.3);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(79, 124, 255, 0.5);
-}
-
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(79, 124, 255, 0.3) rgba(255, 255, 255, 0.02);
-}
-
-/* Dark text selection */
-::selection {
-  background: #4f7cff;
-  color: #fff;
-}
-
-::-moz-selection {
-  background: #4f7cff;
-  color: #fff;
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 @keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 0px rgba(79, 124, 255, 0.12);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(79, 124, 255, 0.12);
-  }
-}
-
-.fadeUp {
-  opacity: 0;
-  animation: fadeUp 0.75s ease forwards;
-}
-
-.glowCard {
-  animation: pulseGlow 4s ease infinite;
-}
-
-.bodyGradient {
-  background: radial-gradient(circle at top left, rgba(79, 124, 255, 0.14), transparent 35%),
-              radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.12), transparent 30%);
-}
-
-.hero-border {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+::selection {
+  background: rgba(6, 182, 212, 0.3);
+  color: #F8FAFB;
 }
