@@ -1,93 +1,94 @@
-import { Link } from "react-router-dom";
-
 function Terms() {
   return (
     <div style={styles.page}>
       <div style={styles.container}>
-        <h1 style={styles.title}>Terms of Service</h1>
-        <p style={styles.date}>Last updated: June 2026</p>
+        <h1 style={styles.title}>Terms & Conditions</h1>
+        <p style={styles.updated}>Last updated: August 2026</p>
 
         <div style={styles.section}>
-          <h2>1. Acceptance of Terms</h2>
-          <p>By accessing or using Syndra, you agree to these Terms of Service. If you do not agree, do not use the platform.</p>
+          <h2>1. Overview</h2>
+          <p>Syndra is a digital marketplace. Creators upload digital products. Customers purchase them. Promoters and resellers earn from qualifying product sales. By using Syndra, you agree to these terms.</p>
         </div>
 
         <div style={styles.section}>
-          <h2>2. Description of Service</h2>
-          <p>Syndra is a digital marketplace where creators sell downloadable digital products. Promoters earn commissions by sharing referral links. Customers purchase and download digital products.</p>
+          <h2>2. Accounts</h2>
+          <p>You must provide accurate information when creating an account. You are responsible for your account security. Syndra may suspend accounts that violate these terms or engage in fraudulent activity.</p>
         </div>
 
         <div style={styles.section}>
-          <h2>3. User Accounts</h2>
-          <p>You are responsible for maintaining the security of your account. You must provide accurate information during registration. Syndra reserves the right to suspend or terminate accounts that violate these terms.</p>
+          <h2>3. Digital Products</h2>
+          <p>All products on Syndra are digital downloads. Products include ebooks, templates, guides, worksheets, and digital art. Creators retain ownership of their content. Purchasing a product grants you a license to use it — not to resell it unless explicitly stated.</p>
         </div>
 
         <div style={styles.section}>
-          <h2>4. Creator Terms</h2>
-          <p>Creators retain ownership of their content. By uploading, you grant Syndra the right to display and distribute your products on the platform. You must own or have rights to all content you upload. Malware, illegal content, or copyright-infringing material is strictly prohibited.</p>
+          <h2>4. Promoters</h2>
+          <p>Promoters join free. Promoters receive unique referral links. Promoters earn commission only when a customer completes a qualifying purchase through their link. Clicking a link, creating an account, or signing up does NOT generate commission.</p>
         </div>
 
         <div style={styles.section}>
-          <h2>5. Promoter Terms</h2>
-          <p>Promoters earn commissions as defined by the platform's commission settings. Self-referral (purchasing through your own link) is prohibited. Fraudulent activity will result in forfeiture of earnings and account termination.</p>
+          <h2>5. Resellers</h2>
+          <p>Users may purchase reseller bundles. A bundle includes specific digital products and the resale rights described in the bundle. Purchasing a bundle does NOT guarantee income or profit. Resellers must comply with the license terms and restrictions in their bundle.</p>
         </div>
 
         <div style={styles.section}>
-          <h2>6. Payments and Refunds</h2>
-          <p>All prices are in USD unless otherwise stated. Due to the digital nature of products, refunds are generally not provided unless the product is defective, misrepresented, or not as described. Refund requests are reviewed on a case-by-case basis.</p>
+          <h2>6. Referral System</h2>
+          <p>Referral commissions are paid when a referred user completes a qualifying purchase. Referral commission is one-level only. If User A refers User B, and User B refers User C, User A receives nothing from User C's purchase. Commissions are never paid for account creation alone.</p>
         </div>
 
         <div style={styles.section}>
-          <h2>7. Commission Structure</h2>
-          <p>Default commission split: Creator 70%, Promoter 20%, Syndra 10%. Syndra reserves the right to modify commission rates with notice.</p>
+          <h2>7. Payments</h2>
+          <p>Payments are processed in Ethiopian Birr (ETB) via Telebirr or CBE. Transactions are recorded in a financial ledger. Every commission is traceable to its source transaction.</p>
         </div>
 
         <div style={styles.section}>
-          <h2>8. Limitation of Liability</h2>
-          <p>Syndra is provided "as is." We do not guarantee uninterrupted service. We are not liable for damages arising from use of the platform.</p>
+          <h2>8. Refunds & Chargebacks</h2>
+          <p>Digital products are generally non-refundable once downloaded. If a transaction is refunded, reversed, or charged back, all associated commissions are reversed. Users cannot withdraw commissions from transactions that have not been successfully completed.</p>
         </div>
 
         <div style={styles.section}>
-          <h2>9. Contact</h2>
-          <p>For questions about these terms, contact us through the platform.</p>
+          <h2>9. Earnings Disclaimer</h2>
+          <p>Syndra does NOT guarantee income. Purchasing a reseller bundle does NOT guarantee profit. Actual earnings depend on sales, demand, effort, and other factors. Past earnings are not guarantees of future results.</p>
         </div>
 
-        <Link to="/" style={styles.backLink}>← Back to Home</Link>
+        <div style={styles.section}>
+          <h2>10. Prohibited Conduct</h2>
+          <p>Users may not: upload copyrighted content without permission, resell products outside their granted license, create duplicate accounts, engage in self-referrals, commit fraud, or misrepresent earning potential.</p>
+        </div>
+
+        <div style={styles.section}>
+          <h2>11. Fraud Prevention</h2>
+          <p>Syndra monitors for suspicious activity including self-referrals, duplicate accounts, rapid purchase/refund cycles, and unusual referral patterns. Suspected fraud is flagged for review. Commissions from fraudulent transactions are reversed.</p>
+        </div>
+
+        <div style={styles.section}>
+          <h2>12. Limitation of Liability</h2>
+          <p>Syndra is provided "as is." We do not guarantee uninterrupted service. We are not liable for damages arising from use of the platform or from failed placements.</p>
+        </div>
+
+        <div style={styles.section}>
+          <h2>13. Changes to Terms</h2>
+          <p>We may update these terms. Continued use after changes constitutes acceptance.</p>
+        </div>
+
+        <div style={styles.section}>
+          <h2>14. Legal Review</h2>
+          <p>These terms should be reviewed by a qualified legal professional in Ethiopia before publication. This document is not a substitute for legal advice.</p>
+        </div>
       </div>
     </div>
   );
 }
 
 const styles = {
-  page: {
-    minHeight: "calc(100vh - 70px)",
-    padding: "40px 24px",
-    color: "#fff",
-    background: "linear-gradient(180deg, #05070d 0%, #0f172a 100%)",
-    fontFamily: "Inter, sans-serif",
-  },
-  container: {
-    maxWidth: "800px",
-    margin: "0 auto",
-  },
-  title: {
-    fontSize: "36px",
-    margin: 0,
-  },
-  date: {
-    color: "#64748b",
-    marginTop: "8px",
-    marginBottom: "32px",
-  },
-  section: {
-    marginBottom: "28px",
-  },
-  backLink: {
-    display: "inline-block",
-    marginTop: "24px",
-    color: "#a5b4ff",
-    textDecoration: "none",
-  },
+  page: { background: "#0A0E17", color: "#F8FAFB", fontFamily: "'Inter', sans-serif", minHeight: "100vh", padding: "60px 24px" },
+  container: { maxWidth: "700px", margin: "0 auto" },
+  title: { fontSize: "32px", fontWeight: 700, letterSpacing: "-0.01em", margin: 0 },
+  updated: { color: "#94A3B8", fontSize: "13px", marginTop: "4px", marginBottom: "40px" },
+  section: { marginBottom: "28px" },
+  sectionTitle: { fontSize: "18px", fontWeight: 600, marginBottom: "8px" },
+  sectionDesc: { color: "#CBD5E1", lineHeight: 1.7, fontSize: "14px" },
+  listItem: { color: "#CBD5E1", lineHeight: 1.7, fontSize: "14px", margin: "4px 0", paddingLeft: "16px" },
+  disclaimer: { padding: "16px", borderRadius: "8px", background: "rgba(217,119,6,0.1)", border: "1px solid rgba(217,119,6,0.3)", color: "#F59E0B", fontSize: "13px", lineHeight: 1.6, marginBottom: "24px" },
 };
 
 export default Terms;
