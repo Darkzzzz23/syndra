@@ -1,0 +1,16 @@
+project:
+  name: my-api
+
+tests:
+  - name: verify-health
+    request:
+      method: GET
+      url: ${API_BASE_URL}/health
+      timeout_ms: 5000
+    expect:
+      status: 200
+      headers:
+        content-type: application/json
+      json:
+        - path: status
+          equals: ok
